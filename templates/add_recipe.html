@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Add New Recipe - Recipe Journey{% endblock %}
+{% block title %}Добавление нового рецепта - Путешествие через рецепты{% endblock %}
 
 {% block content %}
 <div class="container py-5">
@@ -100,7 +100,7 @@
                         
                         <div class="mb-3">
                             {{ form.ingredients.label(class="form-label") }}
-                            <div class="form-text mb-2">Enter each ingredient on a new line.</div>
+                            <div class="form-text mb-2">Введите каждый ингредиент с новой строки.</div>
                             {{ form.ingredients(class="form-control", rows="8") }}
                             {% if form.ingredients.errors %}
                                 <div class="text-danger">
@@ -113,7 +113,7 @@
                         
                         <div class="mb-4">
                             {{ form.instructions.label(class="form-label") }}
-                            <div class="form-text mb-2">Enter each step on a new line.</div>
+                            <div class="form-text mb-2">Введите каждый шаг с новой строки.</div>
                             {{ form.instructions(class="form-control", rows="10") }}
                             {% if form.instructions.errors %}
                                 <div class="text-danger">

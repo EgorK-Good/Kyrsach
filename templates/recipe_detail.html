@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ recipe.title }} - Recipe Journey{% endblock %}
+{% block title %}{{ recipe.title }} - Путешествие через рецепты{% endblock %}
 
 {% block content %}
 <div class="recipe-header">
@@ -12,19 +12,19 @@
                 <div class="recipe-meta">
                     <div class="recipe-meta-item">
                         <i class="fas fa-clock"></i>
-                        <span>Prep: {{ recipe.prep_time }} min</span>
+                        <span>Подготовка: {{ recipe.prep_time }} мин</span>
                     </div>
                     <div class="recipe-meta-item">
                         <i class="fas fa-fire"></i>
-                        <span>Cook: {{ recipe.cook_time }} min</span>
+                        <span>Приготовление: {{ recipe.cook_time }} мин</span>
                     </div>
                     <div class="recipe-meta-item">
                         <i class="fas fa-users"></i>
-                        <span>Servings: {{ recipe.servings }}</span>
+                        <span>Порции: {{ recipe.servings }}</span>
                     </div>
                     <div class="recipe-meta-item">
                         <i class="fas fa-signal"></i>
-                        <span>Difficulty: {{ recipe.difficulty }}</span>
+                        <span>Сложность: {{ recipe.difficulty }}</span>
                     </div>
                 </div>
             </div>
@@ -37,12 +37,12 @@
         <div class="col-lg-8 mx-auto">
             <div class="recipe-content mb-4">
                 <div class="recipe-section">
-                    <h3>Description</h3>
+                    <h3>Описание</h3>
                     <p>{{ recipe.description }}</p>
                 </div>
                 
                 <div class="recipe-section">
-                    <h3>Ingredients</h3>
+                    <h3>Ингредиенты</h3>
                     <ul class="ingredients-list">
                         {% for ingredient in recipe.ingredients.split('\n') %}
                             {% if ingredient.strip() %}
@@ -53,7 +53,7 @@
                 </div>
                 
                 <div class="recipe-section">
-                    <h3>Instructions</h3>
+                    <h3>Инструкции</h3>
                     <ol class="instructions-list">
                         {% for instruction in recipe.instructions.split('\n') %}
                             {% if instruction.strip() %}
@@ -67,11 +67,11 @@
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <small class="text-muted">
-                        Added by <span class="text-accent">{{ recipe.author.username }}</span> on {{ recipe.created_at.strftime('%B %d, %Y') }}
+                        Добавил <span class="text-accent">{{ recipe.author.username }}</span> {{ recipe.created_at.strftime('%d.%m.%Y') }}
                     </small>
                     {% if recipe.updated_at != recipe.created_at %}
                         <small class="text-muted d-block">
-                            Updated on {{ recipe.updated_at.strftime('%B %d, %Y') }}
+                            Обновлено {{ recipe.updated_at.strftime('%d.%m.%Y') }}
                         </small>
                     {% endif %}
                 </div>
@@ -82,20 +82,20 @@
                             <button type="submit" class="btn btn-favorite {% if is_favorite %}active{% endif %}" data-recipe-id="{{ recipe.id }}">
                                 <i class="fas fa-heart{% if not is_favorite %}-o{% endif %}"></i>
                                 {% if is_favorite %}
-                                    Remove from Favorites
+                                    Убрать из избранного
                                 {% else %}
-                                    Add to Favorites
+                                    Добавить в избранное
                                 {% endif %}
                             </button>
                         </form>
                         
                         {% if current_user.id == recipe.user_id or current_user.is_admin %}
                             <a href="{{ url_for('edit_recipe', recipe_id=recipe.id) }}" class="btn btn-outline-primary ms-2">
-                                <i class="fas fa-edit"></i> Edit
+                                <i class="fas fa-edit"></i> Редактировать
                             </a>
                             <form action="{{ url_for('delete_recipe', recipe_id=recipe.id) }}" method="POST" class="d-inline" id="delete-recipe-form">
                                 <button type="submit" class="btn btn-outline-danger ms-2">
-                                    <i class="fas fa-trash"></i> Delete
+                                    <i class="fas fa-trash"></i> Удалить
                                 </button>
                             </form>
                         {% endif %}
@@ -109,7 +109,7 @@
     {% if related_recipes %}
         <div class="row mt-5">
             <div class="col-12">
-                <h2 class="mb-4">More {{ recipe.cuisine.name }} Recipes</h2>
+                <h2 class="mb-4">Больше рецептов {{ recipe.cuisine.name }} кухни</h2>
             </div>
             {% for related in related_recipes %}
                 <div class="col-md-4 mb-4">
@@ -120,7 +120,7 @@
                             <div class="d-flex justify-content-between align-items-center mt-3">
                                 <div class="recipe-meta-item">
                                     <i class="fas fa-clock text-olive"></i>
-                                    <span>{{ related.prep_time + related.cook_time }} min</span>
+                                    <span>{{ related.prep_time + related.cook_time }} мин</span>
                                 </div>
                                 <div class="recipe-meta-item">
                                     <i class="fas fa-signal text-olive"></i>
@@ -129,7 +129,7 @@
                             </div>
                         </div>
                         <div class="card-footer">
-                            <a href="{{ url_for('recipe_detail', recipe_id=related.id) }}" class="btn btn-primary">View Recipe</a>
+                            <a href="{{ url_for('recipe_detail', recipe_id=related.id) }}" class="btn btn-primary">Посмотреть рецепт</a>
                         </div>
                     </div>
                 </div>

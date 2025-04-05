@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Register - Recipe Journey{% endblock %}
+{% block title %}Регистрация - Путешествие через рецепты{% endblock %}
 
 {% block content %}
 <div class="container py-5">
@@ -8,7 +8,7 @@
         <div class="col-md-6">
             <div class="card shadow-custom">
                 <div class="card-body p-4">
-                    <h2 class="text-center mb-4">Create an Account</h2>
+                    <h2 class="text-center mb-4">Создание аккаунта</h2>
                     <form method="POST" action="{{ url_for('register') }}">
                         {{ form.hidden_tag() }}
                         <div class="mb-3">
@@ -21,7 +21,7 @@
                                     {% endfor %}
                                 </div>
                             {% endif %}
-                            <div class="form-text">Username must be at least 3 characters long.</div>
+                            <div class="form-text">Имя пользователя должно содержать не менее 3 символов.</div>
                         </div>
                         <div class="mb-3">
                             {{ form.email.label(class="form-label") }}
@@ -44,7 +44,7 @@
                                     {% endfor %}
                                 </div>
                             {% endif %}
-                            <div class="form-text">Password must be at least 8 characters long.</div>
+                            <div class="form-text">Пароль должен содержать не менее 8 символов.</div>
                         </div>
                         <div class="mb-4">
                             {{ form.confirm_password.label(class="form-label") }}
@@ -63,7 +63,7 @@
                     </form>
                 </div>
                 <div class="card-footer bg-light p-3 text-center">
-                    <p class="mb-0">Already have an account? <a href="{{ url_for('login') }}">Log in here</a></p>
+                    <p class="mb-0">Уже есть аккаунт? <a href="{{ url_for('login') }}">Войдите здесь</a></p>
                 </div>
             </div>
         </div>
