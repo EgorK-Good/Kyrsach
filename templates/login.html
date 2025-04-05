@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Login - Recipe Journey{% endblock %}
+{% block title %}Вход - Путешествие через рецепты{% endblock %}
 
 {% block content %}
 <div class="container py-5">
@@ -8,12 +8,13 @@
         <div class="col-md-6">
             <div class="card shadow-custom">
                 <div class="card-body p-4">
-                    <h2 class="text-center mb-4">Log In</h2>
+                    <h2 class="text-center mb-4">Вход в систему</h2>
                     <form method="POST" action="{{ url_for('login') }}">
                         {{ form.hidden_tag() }}
                         <div class="mb-3">
                             {{ form.username.label(class="form-label") }}
-                            {{ form.username(class="form-control") }}
+                            {{ form.username(class="form-control", placeholder="Введите имя пользователя") }}
+                            <small class="text-muted">Используйте имя пользователя, а не email адрес</small>
                             {% if form.username.errors %}
                                 <div class="text-danger">
                                     {% for error in form.username.errors %}
@@ -24,7 +25,7 @@
                         </div>
                         <div class="mb-3">
                             {{ form.password.label(class="form-label") }}
-                            {{ form.password(class="form-control") }}
+                            {{ form.password(class="form-control", placeholder="Введите пароль") }}
                             {% if form.password.errors %}
                                 <div class="text-danger">
                                     {% for error in form.password.errors %}
@@ -41,9 +42,15 @@
                             {{ form.submit(class="btn btn-primary btn-lg") }}
                         </div>
                     </form>
+                    
+                    <div class="mt-3 p-3 bg-light rounded">
+                        <h5>Тестовый аккаунт администратора:</h5>
+                        <p class="mb-1"><strong>Имя пользователя:</strong> testadmin</p>
+                        <p class="mb-0"><strong>Пароль:</strong> testpassword123</p>
+                    </div>
                 </div>
                 <div class="card-footer bg-light p-3 text-center">
-                    <p class="mb-0">Don't have an account? <a href="{{ url_for('register') }}">Register here</a></p>
+                    <p class="mb-0">Нет аккаунта? <a href="{{ url_for('register') }}">Зарегистрируйтесь</a></p>
                 </div>
             </div>
         </div>
