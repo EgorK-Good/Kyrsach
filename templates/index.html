@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}Recipe Journey - Explore World Cuisines{% endblock %}
+
+{% block content %}
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container text-center">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <h1 class="display-4 fw-bold">Explore Culinary Traditions Around the World</h1>
+                    <p class="lead">Discover authentic recipes from Russian, Armenian, Japanese, and Italian cuisines. Start your culinary journey today!</p>
+                    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                        <a href="{{ url_for('recipes') }}" class="btn btn-primary btn-lg px-4 gap-3">Explore Recipes</a>
+                        {% if not current_user.is_authenticated %}
+                            <a href="{{ url_for('register') }}" class="btn btn-outline-primary btn-lg px-4">Sign Up</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Cuisines Section -->
+    <section class="container section">
+        <h2 class="text-center mb-4">Explore Cuisines</h2>
+        <div class="row">
+            {% for cuisine in cuisines %}
+                <div class="col-md-3 col-sm-6 mb-4">
+                    <div class="card h-100 animate-on-scroll">
+                        <div class="card-body text-center">
+                            <h3 class="card-title">{{ cuisine.name }}</h3>
+                            <p class="card-text">{{ cuisine.description }}</p>
+                            <a href="{{ url_for('cuisine_recipes', cuisine_id=cuisine.id) }}" class="btn btn-outline-primary">Explore</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Featured Recipes Section -->
+    <section class="bg-beige py-5">
+        <div class="container section">
+            <h2 class="text-center mb-4">Featured Recipes</h2>
+            <div class="row">
+                {% if featured_recipes %}
+                    {% for recipe in featured_recipes %}
+                        <div class="col-lg-4 col-md-6 mb-4">
+                            <div class="card h-100 animate-on-scroll">
+                                <div class="card-body">
+                                    <h3 class="card-title">{{ recipe.title }}</h3>
+                                    <p class="card-subtitle">{{ recipe.cuisine.name }} Cuisine</p>
+                                    <p class="card-text">{{ recipe.description[:100] }}{% if recipe.description|length > 100 %}...{% endif %}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="recipe-meta-item">
+                                            <i class="fas fa-clock"></i>
+                                            <span>{{ recipe.prep_time + recipe.cook_time }} min</span>
+                                        </div>
+                                        <div class="recipe-meta-item">
+                                            <i class="fas fa-signal"></i>
+                                            <span>{{ recipe.difficulty }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-footer">
+                                    <a href="{{ url_for('recipe_detail', recipe_id=recipe.id) }}" class="btn btn-primary btn-sm">View Recipe</a>
+                                    {% if current_user.is_authenticated %}
+                                        {% set is_favorite = current_user.favorites.filter_by(recipe_id=recipe.id).first() %}
+                                        <button class="btn btn-favorite float-end {% if is_favorite %}active{% endif %}" 
+                                                data-recipe-id="{{ recipe.id }}" 
+                                                data-bs-toggle="tooltip" 
+                                                title="{% if is_favorite %}Remove from favorites{% else %}Add to favorites{% endif %}">
+                                            <i class="fas fa-heart{% if not is_favorite %}-o{% endif %}"></i>
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="col-12 text-center">
+                        <p>No recipes available yet. Be the first to <a href="{{ url_for('add_recipe') }}">add a recipe</a>!</p>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="text-center mt-4">
+                <a href="{{ url_for('recipes') }}" class="btn btn-primary">View All Recipes</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Join Section -->
+    <section class="container section">
+        <h2 class="text-center mb-4">Why Join Recipe Journey?</h2>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 animate-on-scroll">
+                    <div class="card-body text-center">
+                        <i class="fas fa-globe-americas fa-3x text-accent mb-3"></i>
+                        <h3 class="card-title">Explore Authentic Cuisines</h3>
+                        <p class="card-text">Discover recipes from Russian, Armenian, Japanese, and Italian culinary traditions, with authentic preparations and ingredients.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 animate-on-scroll">
+                    <div class="card-body text-center">
+                        <i class="fas fa-users fa-3x text-accent mb-3"></i>
+                        <h3 class="card-title">Join Our Community</h3>
+                        <p class="card-text">Connect with food enthusiasts around the world, share your own recipes, and learn from others' culinary experiences.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 animate-on-scroll">
+                    <div class="card-body text-center">
+                        <i class="fas fa-book-open fa-3x text-accent mb-3"></i>
+                        <h3 class="card-title">Save Your Favorites</h3>
+                        <p class="card-text">Create your personal recipe collection by saving your favorite dishes for quick access and future cooking adventures.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% if not current_user.is_authenticated %}
+            <div class="text-center mt-4">
+                <a href="{{ url_for('register') }}" class="btn btn-primary">Join Now</a>
+            </div>
+        {% endif %}
+    </section>
+{% endblock %}
