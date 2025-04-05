@@ -30,10 +30,10 @@ def login():
         if user and check_password_hash(user.password_hash, form.password.data):
             login_user(user, remember=form.remember_me.data)
             next_page = request.args.get('next')
-            flash('Login successful!', 'success')
+            flash('Вход выполнен успешно!', 'success')
             return redirect(next_page or url_for('index'))
         else:
-            flash('Invalid username or password', 'danger')
+            flash('Неверное имя пользователя или пароль', 'danger')
     
     return render_template('login.html', form=form)
 
@@ -41,7 +41,7 @@ def login():
 @app.route('/logout')
 def logout():
     logout_user()
-    flash('You have been logged out.', 'info')
+    flash('Вы вышли из системы.', 'info')
     return redirect(url_for('index'))
 
 
@@ -57,9 +57,9 @@ def register():
         existing_email = User.query.filter_by(email=form.email.data).first()
         
         if existing_user:
-            flash('Username already taken. Please choose another.', 'danger')
+            flash('Имя пользователя уже занято. Пожалуйста, выберите другое.', 'danger')
         elif existing_email:
-            flash('Email already registered. Please use another email or log in.', 'danger')
+            flash('Email уже зарегистрирован. Пожалуйста, используйте другой email или войдите в систему.', 'danger')
         else:
             # Create new user
             hashed_password = generate_password_hash(form.password.data)
@@ -72,7 +72,7 @@ def register():
             db.session.add(user)
             db.session.commit()
             
-            flash('Registration successful! Please log in.', 'success')
+            flash('Регистрация успешна! Пожалуйста, войдите в систему.', 'success')
             return redirect(url_for('login'))
     
     return render_template('register.html', form=form)
@@ -86,15 +86,15 @@ def profile():
     if form.validate_on_submit():
         # Check if username is changed and not already taken
         if form.username.data != current_user.username and User.query.filter_by(username=form.username.data).first():
-            flash('Username already taken. Please choose another.', 'danger')
+            flash('Имя пользователя уже занято. Пожалуйста, выберите другое.', 'danger')
         # Check if email is changed and not already registered
         elif form.email.data != current_user.email and User.query.filter_by(email=form.email.data).first():
-            flash('Email already registered. Please use another email.', 'danger')
+            flash('Email уже зарегистрирован. Пожалуйста, используйте другой email.', 'danger')
         else:
             current_user.username = form.username.data
             current_user.email = form.email.data
             db.session.commit()
-            flash('Profile updated successfully!', 'success')
+            flash('Профиль успешно обновлен!', 'success')
             return redirect(url_for('profile'))
     
     # Get user's recipes
@@ -114,7 +114,7 @@ def recipes():
     
     # Populate cuisine choices for the form
     cuisines = Cuisine.query.all()
-    form.cuisine.choices = [(0, 'All Cuisines')] + [(c.id, c.name) for c in cuisines]
+    form.cuisine.choices = [(0, 'Все кухни')] + [(c.id, c.name) for c in cuisines]
     
     # Get filter parameters
     cuisine_id = request.args.get('cuisine', 0, type=int)
@@ -179,10 +179,10 @@ def add_recipe():
         db.session.add(recipe)
         db.session.commit()
         
-        flash('Recipe added successfully!', 'success')
+        flash('Рецепт успешно добавлен!', 'success')
         return redirect(url_for('recipe_detail', recipe_id=recipe.id))
     
-    return render_template('add_recipe.html', form=form, title='Add New Recipe')
+    return render_template('add_recipe.html', form=form, title='Добавить новый рецепт')
 
 
 @app.route('/edit_recipe/<int:recipe_id>', methods=['GET', 'POST'])
@@ -209,10 +209,10 @@ def edit_recipe(recipe_id):
         recipe.cuisine_id = form.cuisine_id.data
         
         db.session.commit()
-        flash('Recipe updated successfully!', 'success')
+        flash('Рецепт успешно обновлен!', 'success')
         return redirect(url_for('recipe_detail', recipe_id=recipe.id))
     
-    return render_template('edit_recipe.html', form=form, recipe=recipe, title='Edit Recipe')
+    return render_template('edit_recipe.html', form=form, recipe=recipe, title='Редактировать рецепт')
 
 
 @app.route('/delete_recipe/<int:recipe_id>', methods=['POST'])
@@ -227,7 +227,7 @@ def delete_recipe(recipe_id):
     db.session.delete(recipe)
     db.session.commit()
     
-    flash('Recipe deleted successfully!', 'success')
+    flash('Рецепт успешно удален!', 'success')
     return redirect(url_for('profile'))
 
 
@@ -242,14 +242,14 @@ def toggle_favorite(recipe_id):
         db.session.delete(favorite)
         db.session.commit()
         is_favorite = False
-        message = 'Recipe removed from favorites'
+        message = 'Рецепт удален из избранного'
     else:
         # Add to favorites
         favorite = Favorite(user_id=current_user.id, recipe_id=recipe_id)
         db.session.add(favorite)
         db.session.commit()
         is_favorite = True
-        message = 'Recipe added to favorites'
+        message = 'Рецепт добавлен в избранное'
     
     # If the request was AJAX, return JSON
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -266,7 +266,12 @@ def cuisine_recipes(cuisine_id):
     page = request.args.get('page', 1, type=int)
     recipes = Recipe.query.filter_by(cuisine_id=cuisine_id).paginate(page=page, per_page=9, error_out=False)
     
-    return render_template('recipes.html', recipes=recipes, cuisine=cuisine, cuisines=Cuisine.query.all())
+    # Создаем объект формы для поиска
+    form = SearchForm()
+    form.cuisine.choices = [(0, 'Все кухни')] + [(c.id, c.name) for c in Cuisine.query.all()]
+    form.cuisine.data = cuisine_id  # Предварительно выбираем текущую кухню
+    
+    return render_template('recipes.html', form=form, recipes=recipes, cuisine=cuisine, cuisines=Cuisine.query.all())
 
 
 @app.route('/admin')
@@ -297,16 +302,16 @@ def add_cuisine():
         existing_cuisine = Cuisine.query.filter_by(name=form.name.data).first()
         
         if existing_cuisine:
-            flash('Cuisine already exists!', 'danger')
+            flash('Такая кухня уже существует!', 'danger')
         else:
             cuisine = Cuisine(name=form.name.data, description=form.description.data)
             db.session.add(cuisine)
             db.session.commit()
             
-            flash('Cuisine added successfully!', 'success')
+            flash('Кухня успешно добавлена!', 'success')
             return redirect(url_for('admin_dashboard'))
     
-    return render_template('add_recipe.html', form=form, title='Add New Cuisine')
+    return render_template('add_recipe.html', form=form, title='Добавить новую кухню')
 
 
 @app.route('/admin/delete_cuisine/<int:cuisine_id>', methods=['POST'])
@@ -322,11 +327,11 @@ def delete_cuisine(cuisine_id):
     recipes_count = Recipe.query.filter_by(cuisine_id=cuisine_id).count()
     
     if recipes_count > 0:
-        flash(f'Cannot delete cuisine: {recipes_count} recipes are associated with it.', 'danger')
+        flash(f'Невозможно удалить кухню: с ней связано {recipes_count} рецептов.', 'danger')
     else:
         db.session.delete(cuisine)
         db.session.commit()
-        flash('Cuisine deleted successfully!', 'success')
+        flash('Кухня успешно удалена!', 'success')
     
     return redirect(url_for('admin_dashboard'))
 
@@ -342,13 +347,13 @@ def toggle_admin(user_id):
     
     # Don't allow removing admin privileges from yourself
     if user.id == current_user.id:
-        flash('You cannot remove your own admin privileges.', 'danger')
+        flash('Вы не можете отменить свои собственные права администратора.', 'danger')
     else:
         user.is_admin = not user.is_admin
         db.session.commit()
         
-        status = 'granted' if user.is_admin else 'revoked'
-        flash(f'Admin privileges {status} for {user.username}.', 'success')
+        status = 'предоставлены' if user.is_admin else 'отозваны'
+        flash(f'Права администратора {status} для {user.username}.', 'success')
     
     return redirect(url_for('admin_dashboard'))
 
@@ -356,15 +361,15 @@ def toggle_admin(user_id):
 # Error handlers
 @app.errorhandler(404)
 def not_found_error(error):
-    return render_template('error.html', error_code=404, message="Page not found"), 404
+    return render_template('error.html', error_code=404, message="Страница не найдена"), 404
 
 
 @app.errorhandler(403)
 def forbidden_error(error):
-    return render_template('error.html', error_code=403, message="Access forbidden"), 403
+    return render_template('error.html', error_code=403, message="Доступ запрещен"), 403
 
 
 @app.errorhandler(500)
 def internal_error(error):
     db.session.rollback()
-    return render_template('error.html', error_code=500, message="Internal server error"), 500
+    return render_template('error.html', error_code=500, message="Внутренняя ошибка сервера"), 500

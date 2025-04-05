@@ -55,27 +55,27 @@ with app.app_context():
     if not admin:
         admin = User(
             username='admin',
-            email='admin@example.com',
-            password_hash=generate_password_hash('adminpassword'),
+            email='korejbaegor@gmail.com',
+            password_hash=generate_password_hash('12345678egor'),
             is_admin=True
         )
         db.session.add(admin)
         db.session.commit()
-        app.logger.info('Admin user created')
+        app.logger.info('Администратор создан')
     
     # Create default cuisines if they don't exist
     if Cuisine.query.count() == 0:
         # Create the four required cuisines
         cuisines = [
-            Cuisine(name='Russian', description='Traditional Russian cuisine with hearty soups, stews, and dumplings.'),
-            Cuisine(name='Armenian', description='Armenian cuisine features fresh herbs, spices, and slow-cooked dishes.'),
-            Cuisine(name='Japanese', description='Japanese cuisine emphasizes fresh, seasonal ingredients with minimal preparation.'),
-            Cuisine(name='Italian', description='Italian cuisine is known for its pasta, pizza, risotto, and regional specialties.')
+            Cuisine(name='Русская', description='Традиционная русская кухня с сытными супами, тушеными блюдами и пельменями.'),
+            Cuisine(name='Армянская', description='Армянская кухня отличается свежими травами, специями и медленно приготовленными блюдами.'),
+            Cuisine(name='Японская', description='Японская кухня подчеркивает свежие, сезонные ингредиенты с минимальной обработкой.'),
+            Cuisine(name='Итальянская', description='Итальянская кухня известна своей пастой, пиццей, ризотто и региональными особенностями.')
         ]
         
         db.session.add_all(cuisines)
         db.session.commit()
-        app.logger.info('Default cuisines created')
+        app.logger.info('Созданы кухни по умолчанию')
 
 # Load user from session
 @login_manager.user_loader
