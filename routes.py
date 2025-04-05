@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import app, db
 from models import User, Recipe, Cuisine, Favorite
-from forms import LoginForm, RegistrationForm, RecipeForm, CuisineForm, SearchForm, ProfileForm
+from forms import LoginForm, RegistrationForm, RecipeForm, CuisineForm, SearchForm, ProfileForm, AdminUserEditForm
 import logging
 
 
@@ -93,6 +93,8 @@ def profile():
         else:
             current_user.username = form.username.data
             current_user.email = form.email.data
+            current_user.avatar = form.avatar.data
+            current_user.bio = form.bio.data
             db.session.commit()
             flash('Профиль успешно обновлен!', 'success')
             return redirect(url_for('profile'))
@@ -355,6 +357,62 @@ def toggle_admin(user_id):
         status = 'предоставлены' if user.is_admin else 'отозваны'
         flash(f'Права администратора {status} для {user.username}.', 'success')
     
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/edit_user/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+def admin_edit_user(user_id):
+    # Check if the current user is an admin
+    if not current_user.is_admin:
+        abort(403)  # Forbidden
+    
+    user = User.query.get_or_404(user_id)
+    form = AdminUserEditForm(obj=user)
+    
+    if form.validate_on_submit():
+        # Check if username is changed and not already taken
+        if form.username.data != user.username and User.query.filter_by(username=form.username.data).first():
+            flash('Имя пользователя уже занято. Пожалуйста, выберите другое.', 'danger')
+        # Check if email is changed and not already registered
+        elif form.email.data != user.email and User.query.filter_by(email=form.email.data).first():
+            flash('Email уже зарегистрирован. Пожалуйста, используйте другой email.', 'danger')
+        else:
+            user.username = form.username.data
+            user.email = form.email.data
+            user.avatar = form.avatar.data
+            user.bio = form.bio.data
+            user.is_admin = form.is_admin.data
+            
+            db.session.commit()
+            flash(f'Профиль пользователя {user.username} успешно обновлен!', 'success')
+            return redirect(url_for('admin_dashboard'))
+    
+    return render_template('admin_edit_user.html', form=form, user=user)
+
+
+@app.route('/admin/delete_user/<int:user_id>', methods=['POST'])
+@login_required
+def admin_delete_user(user_id):
+    # Check if the current user is an admin
+    if not current_user.is_admin:
+        abort(403)  # Forbidden
+    
+    user = User.query.get_or_404(user_id)
+    
+    # Не позволяем удалить самого себя
+    if user.id == current_user.id:
+        flash('Вы не можете удалить свой собственный аккаунт.', 'danger')
+        return redirect(url_for('admin_dashboard'))
+    
+    # Запоминаем имя для сообщения после удаления
+    username = user.username
+    
+    # Удаляем пользователя (удаление рецептов и избранного произойдет автоматически благодаря каскадному удалению)
+    db.session.delete(user)
+    db.session.commit()
+    
+    flash(f'Пользователь {username} был успешно удален.', 'success')
     return redirect(url_for('admin_dashboard'))
 
 

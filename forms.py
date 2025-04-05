@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, TextAreaField, IntegerField, SelectField, SubmitField, BooleanField
-from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional, NumberRange
+from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional, NumberRange, URL
 
 
 class LoginForm(FlaskForm):
@@ -50,4 +50,15 @@ class SearchForm(FlaskForm):
 class ProfileForm(FlaskForm):
     username = StringField('Имя пользователя', validators=[DataRequired(), Length(min=3, max=64)])
     email = StringField('Email', validators=[DataRequired(), Email()])
+    avatar = StringField('URL аватара', validators=[Optional(), Length(max=256)])
+    bio = TextAreaField('О себе', validators=[Optional()])
     submit = SubmitField('Обновить профиль')
+
+
+class AdminUserEditForm(FlaskForm):
+    username = StringField('Имя пользователя', validators=[DataRequired(), Length(min=3, max=64)])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    avatar = StringField('URL аватара', validators=[Optional(), Length(max=256)])
+    bio = TextAreaField('О себе', validators=[Optional()])
+    is_admin = BooleanField('Администратор')
+    submit = SubmitField('Сохранить изменения')

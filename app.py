@@ -57,7 +57,9 @@ with app.app_context():
             username='admin',
             email='korejbaegor@gmail.com',
             password_hash=generate_password_hash('12345678egor'),
-            is_admin=True
+            is_admin=True,
+            avatar='default_avatar.png',
+            bio='Администратор сайта'
         )
         db.session.add(admin)
         db.session.commit()

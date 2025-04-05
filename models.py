@@ -10,8 +10,10 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(256), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
     date_joined = db.Column(db.DateTime, default=datetime.utcnow)
-    recipes = db.relationship('Recipe', backref='author', lazy='dynamic')
-    favorites = db.relationship('Favorite', backref='user', lazy='dynamic')
+    avatar = db.Column(db.String(256), default='default_avatar.png')  # URL или путь к аватарке пользователя
+    bio = db.Column(db.Text, nullable=True)  # Биография пользователя
+    recipes = db.relationship('Recipe', backref='author', lazy='dynamic', cascade='all, delete-orphan')
+    favorites = db.relationship('Favorite', backref='user', lazy='dynamic', cascade='all, delete-orphan')
     
     def __repr__(self):
         return f'<User {self.username}>'
