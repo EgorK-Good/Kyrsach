@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Поделиться рецептом "{{ recipe.title }}"{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h1 class="h3 mb-0">Поделиться рецептом "{{ recipe.title }}"</h1>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <p>Поделитесь этим замечательным рецептом с друзьями через социальные сети:</p>
+                    </div>
+                    
+                    <div class="share-buttons d-flex justify-content-center mb-4">
+                        <a href="{{ share_links.vk }}" target="_blank" class="btn btn-social btn-vk mx-2">
+                            <i class="fab fa-vk fa-2x"></i>
+                        </a>
+                        <a href="{{ share_links.facebook }}" target="_blank" class="btn btn-social btn-facebook mx-2">
+                            <i class="fab fa-facebook fa-2x"></i>
+                        </a>
+                        <a href="{{ share_links.twitter }}" target="_blank" class="btn btn-social btn-twitter mx-2">
+                            <i class="fab fa-twitter fa-2x"></i>
+                        </a>
+                        <a href="{{ share_links.telegram }}" target="_blank" class="btn btn-social btn-telegram mx-2">
+                            <i class="fab fa-telegram fa-2x"></i>
+                        </a>
+                    </div>
+                    
+                    <div class="url-share mt-4">
+                        <label for="recipe-url" class="form-label">Или скопируйте ссылку:</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="recipe-url" value="{{ url_for('recipe_detail', recipe_id=recipe.id, _external=True) }}" readonly>
+                            <button class="btn btn-primary" type="button" id="copy-url-btn">Копировать</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <a href="{{ url_for('recipe_detail', recipe_id=recipe.id) }}" class="btn btn-secondary">Вернуться к рецепту</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const copyButton = document.getElementById('copy-url-btn');
+        const urlInput = document.getElementById('recipe-url');
+        
+        copyButton.addEventListener('click', function() {
+            urlInput.select();
+            document.execCommand('copy');
+            
+            const originalText = copyButton.textContent;
+            copyButton.textContent = 'Скопировано!';
+            copyButton.classList.add('btn-success');
+            copyButton.classList.remove('btn-primary');
+            
+            setTimeout(function() {
+                copyButton.textContent = originalText;
+                copyButton.classList.add('btn-primary');
+                copyButton.classList.remove('btn-success');
+            }, 2000);
+        });
+    });
+</script>
+{% endblock %}

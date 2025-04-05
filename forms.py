@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, TextAreaField, IntegerField, SelectField, SubmitField, BooleanField
-from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional, NumberRange, URL
+from flask_wtf.file import FileField, FileAllowed
+from wtforms import StringField, PasswordField, TextAreaField, IntegerField, SelectField, SubmitField, BooleanField, MultipleFileField, HiddenField
+from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional, NumberRange, URL, ValidationError
 
 
 class LoginForm(FlaskForm):
@@ -32,7 +33,23 @@ class RecipeForm(FlaskForm):
         ('Сложный', 'Сложный')
     ], validators=[DataRequired()])
     cuisine_id = SelectField('Кухня', coerce=int, validators=[DataRequired()])
+    # Поле для выбора категорий (для расширенной фильтрации)
+    categories = SelectField('Категория блюда', choices=[], coerce=int, validators=[Optional()])
+    # Поле для загрузки основного изображения
+    image = FileField('Основное изображение', validators=[
+        Optional(),
+        FileAllowed(['jpg', 'jpeg', 'png'], 'Пожалуйста, загружайте только изображения') 
+    ])
+    # URL основного изображения (для загрузки через URL)
+    image_url = StringField('URL изображения', validators=[Optional(), URL()])
     submit = SubmitField('Сохранить рецепт')
+
+
+class RecipePhotoForm(FlaskForm):
+    photos = MultipleFileField('Добавить дополнительные фотографии', validators=[
+        FileAllowed(['jpg', 'jpeg', 'png'], 'Пожалуйста, загружайте только изображения')
+    ])
+    submit = SubmitField('Загрузить фотографии')
 
 
 class CuisineForm(FlaskForm):
@@ -41,10 +58,54 @@ class CuisineForm(FlaskForm):
     submit = SubmitField('Сохранить кухню')
 
 
+class CategoryForm(FlaskForm):
+    name = StringField('Название категории', validators=[DataRequired(), Length(max=64)])
+    description = TextAreaField('Описание', validators=[Optional()])
+    submit = SubmitField('Сохранить категорию')
+
+
 class SearchForm(FlaskForm):
     query = StringField('Поиск рецептов', validators=[Optional()])
     cuisine = SelectField('Кухня', coerce=int, validators=[Optional()], default=0)
+    category = SelectField('Категория', coerce=int, validators=[Optional()], default=0)
+    prep_time = SelectField('Время подготовки', choices=[
+        (0, 'Любое время'),
+        (15, 'До 15 минут'),
+        (30, 'До 30 минут'),
+        (60, 'До 1 часа'),
+        (120, 'До 2 часов')
+    ], coerce=int, validators=[Optional()], default=0)
+    difficulty = SelectField('Сложность', choices=[
+        ('', 'Любая сложность'),
+        ('Легкий', 'Легкий'),
+        ('Средний', 'Средний'),
+        ('Сложный', 'Сложный')
+    ], validators=[Optional()], default='')
+    # Сортировка
+    sort_by = SelectField('Сортировать по', choices=[
+        ('newest', 'Новые'),
+        ('popular', 'Популярные'),
+        ('rating', 'Высокий рейтинг')
+    ], default='newest')
     submit = SubmitField('Поиск')
+
+
+class CommentForm(FlaskForm):
+    content = TextAreaField('Ваш комментарий', validators=[DataRequired(), Length(min=3, max=1000)])
+    submit = SubmitField('Добавить комментарий')
+
+
+class RatingForm(FlaskForm):
+    value = HiddenField('Оценка', validators=[DataRequired()])
+    submit = SubmitField('Оценить')
+    
+    def validate_value(form, field):
+        try:
+            value = int(field.data)
+            if value < 1 or value > 5:
+                raise ValidationError('Пожалуйста, выберите оценку от 1 до 5')
+        except ValueError:
+            raise ValidationError('Пожалуйста, выберите корректную оценку')
 
 
 class ProfileForm(FlaskForm):

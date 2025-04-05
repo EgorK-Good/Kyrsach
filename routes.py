@@ -1,10 +1,19 @@
-from flask import render_template, flash, redirect, url_for, request, abort, jsonify
+from flask import render_template, flash, redirect, url_for, request, abort, jsonify, current_app, send_from_directory
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from app import app, db
-from models import User, Recipe, Cuisine, Favorite
-from forms import LoginForm, RegistrationForm, RecipeForm, CuisineForm, SearchForm, ProfileForm, AdminUserEditForm
+from models import User, Recipe, Cuisine, Favorite, Comment, Rating, Category, RecipePhoto
+from forms import (LoginForm, RegistrationForm, RecipeForm, CuisineForm, SearchForm,
+                  ProfileForm, AdminUserEditForm, CommentForm, RatingForm, RecipePhotoForm, CategoryForm)
 import logging
+import os
+from datetime import datetime
+from sqlalchemy import func, desc
+import uuid
+import requests
+from io import BytesIO
+from PIL import Image
 
 
 @app.route('/')
@@ -109,112 +118,16 @@ def profile():
     return render_template('profile.html', form=form, user_recipes=user_recipes, favorite_recipes=favorite_recipes)
 
 
-@app.route('/recipes')
-def recipes():
-    # Initialize search form
-    form = SearchForm()
-    
-    # Populate cuisine choices for the form
-    cuisines = Cuisine.query.all()
-    form.cuisine.choices = [(0, 'Все кухни')] + [(c.id, c.name) for c in cuisines]
-    
-    # Get filter parameters
-    cuisine_id = request.args.get('cuisine', 0, type=int)
-    search_query = request.args.get('query', '')
-    
-    # Initialize base query
-    query = Recipe.query
-    
-    # Apply filters
-    if cuisine_id:
-        query = query.filter_by(cuisine_id=cuisine_id)
-        form.cuisine.data = cuisine_id
-    
-    if search_query:
-        form.query.data = search_query
-        query = query.filter(Recipe.title.ilike(f'%{search_query}%'))
-    
-    # Get recipes with pagination
-    page = request.args.get('page', 1, type=int)
-    per_page = 9  # Number of recipes per page
-    recipes_pagination = query.order_by(Recipe.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
-    
-    return render_template('recipes.html', form=form, recipes=recipes_pagination, cuisines=cuisines)
+# Этот маршрут заменен на новую версию ниже в коде
 
 
-@app.route('/recipe/<int:recipe_id>')
-def recipe_detail(recipe_id):
-    recipe = Recipe.query.get_or_404(recipe_id)
-    
-    # Check if the current user has favorited this recipe
-    is_favorite = False
-    if current_user.is_authenticated:
-        is_favorite = Favorite.query.filter_by(user_id=current_user.id, recipe_id=recipe_id).first() is not None
-    
-    # Get other recipes from the same cuisine
-    related_recipes = Recipe.query.filter_by(cuisine_id=recipe.cuisine_id).filter(Recipe.id != recipe_id).limit(3).all()
-    
-    return render_template('recipe_detail.html', recipe=recipe, is_favorite=is_favorite, related_recipes=related_recipes)
+# Этот маршрут заменен на новую версию ниже в коде
 
 
-@app.route('/add_recipe', methods=['GET', 'POST'])
-@login_required
-def add_recipe():
-    form = RecipeForm()
-    
-    # Populate cuisine choices for the form
-    form.cuisine_id.choices = [(c.id, c.name) for c in Cuisine.query.all()]
-    
-    if form.validate_on_submit():
-        recipe = Recipe(
-            title=form.title.data,
-            description=form.description.data,
-            ingredients=form.ingredients.data,
-            instructions=form.instructions.data,
-            prep_time=form.prep_time.data,
-            cook_time=form.cook_time.data,
-            servings=form.servings.data,
-            difficulty=form.difficulty.data,
-            cuisine_id=form.cuisine_id.data,
-            user_id=current_user.id
-        )
-        db.session.add(recipe)
-        db.session.commit()
-        
-        flash('Рецепт успешно добавлен!', 'success')
-        return redirect(url_for('recipe_detail', recipe_id=recipe.id))
-    
-    return render_template('add_recipe.html', form=form, title='Добавить новый рецепт')
+# Этот маршрут заменен на новую версию ниже в коде
 
 
-@app.route('/edit_recipe/<int:recipe_id>', methods=['GET', 'POST'])
-@login_required
-def edit_recipe(recipe_id):
-    recipe = Recipe.query.get_or_404(recipe_id)
-    
-    # Check if user is the recipe author or an admin
-    if recipe.user_id != current_user.id and not current_user.is_admin:
-        abort(403)  # Forbidden
-    
-    form = RecipeForm(obj=recipe)
-    form.cuisine_id.choices = [(c.id, c.name) for c in Cuisine.query.all()]
-    
-    if form.validate_on_submit():
-        recipe.title = form.title.data
-        recipe.description = form.description.data
-        recipe.ingredients = form.ingredients.data
-        recipe.instructions = form.instructions.data
-        recipe.prep_time = form.prep_time.data
-        recipe.cook_time = form.cook_time.data
-        recipe.servings = form.servings.data
-        recipe.difficulty = form.difficulty.data
-        recipe.cuisine_id = form.cuisine_id.data
-        
-        db.session.commit()
-        flash('Рецепт успешно обновлен!', 'success')
-        return redirect(url_for('recipe_detail', recipe_id=recipe.id))
-    
-    return render_template('edit_recipe.html', form=form, recipe=recipe, title='Редактировать рецепт')
+# Этот маршрут заменен на новую версию ниже в коде
 
 
 @app.route('/delete_recipe/<int:recipe_id>', methods=['POST'])
@@ -414,6 +327,489 @@ def admin_delete_user(user_id):
     
     flash(f'Пользователь {username} был успешно удален.', 'success')
     return redirect(url_for('admin_dashboard'))
+
+
+# Функции для обработки загрузки файлов
+def allowed_file(filename):
+    """Проверяет, разрешено ли загружать файл с данным расширением"""
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def save_image(file, folder='recipe_images'):
+    """Сохраняет загруженное изображение и возвращает путь к нему"""
+    if not file:
+        return None
+    
+    filename = secure_filename(file.filename)
+    # Добавляем уникальный идентификатор к имени файла
+    unique_filename = f"{uuid.uuid4().hex}_{filename}"
+    file_path = os.path.join('static', 'uploads', folder, unique_filename)
+    
+    # Сохраняем изображение
+    file.save(file_path)
+    
+    # Возвращаем путь для сохранения в БД
+    return file_path
+
+def save_image_from_url(url, folder='recipe_images'):
+    """Загружает изображение по URL и сохраняет его"""
+    try:
+        response = requests.get(url, timeout=5)
+        response.raise_for_status()
+        
+        # Создаем уникальное имя файла
+        filename = f"{uuid.uuid4().hex}.jpg"
+        file_path = os.path.join('static', 'uploads', folder, filename)
+        
+        # Открываем изображение и сохраняем его
+        image = Image.open(BytesIO(response.content))
+        image.save(file_path)
+        
+        return file_path
+    except Exception as e:
+        logging.error(f"Ошибка при загрузке изображения с URL: {e}")
+        return None
+
+
+# Маршруты для расширенных функций рецептов
+
+@app.route('/recipe/<int:recipe_id>')
+def recipe_detail(recipe_id):
+    recipe = Recipe.query.get_or_404(recipe_id)
+    
+    # Проверяем, добавлен ли рецепт в избранное
+    is_favorite = False
+    if current_user.is_authenticated:
+        is_favorite = Favorite.query.filter_by(user_id=current_user.id, recipe_id=recipe_id).first() is not None
+    
+    # Получаем другие рецепты из той же кухни
+    related_recipes = Recipe.query.filter_by(cuisine_id=recipe.cuisine_id).filter(Recipe.id != recipe_id).limit(3).all()
+    
+    # Получаем комментарии к рецепту
+    comments = Comment.query.filter_by(recipe_id=recipe_id).order_by(Comment.created_at.desc()).all()
+    
+    # Формы для комментирования и рейтинга
+    comment_form = CommentForm()
+    rating_form = RatingForm()
+    
+    # Если пользователь авторизован, проверяем, оценивал ли он уже этот рецепт
+    user_rating = None
+    if current_user.is_authenticated:
+        user_rating = Rating.query.filter_by(user_id=current_user.id, recipe_id=recipe_id).first()
+        if user_rating:
+            rating_form.value.data = user_rating.value
+    
+    # Получаем дополнительные фотографии рецепта
+    photos = RecipePhoto.query.filter_by(recipe_id=recipe_id).all()
+    
+    return render_template('recipe_detail.html', 
+                          recipe=recipe, 
+                          is_favorite=is_favorite, 
+                          related_recipes=related_recipes,
+                          comments=comments,
+                          comment_form=comment_form,
+                          rating_form=rating_form,
+                          user_rating=user_rating,
+                          photos=photos)
+
+
+@app.route('/add_recipe', methods=['GET', 'POST'])
+@login_required
+def add_recipe():
+    form = RecipeForm()
+    
+    # Заполняем выбор кухни
+    form.cuisine_id.choices = [(c.id, c.name) for c in Cuisine.query.all()]
+    
+    # Заполняем категории, если они есть
+    categories = Category.query.all()
+    if categories:
+        form.categories.choices = [(0, 'Без категории')] + [(c.id, c.name) for c in categories]
+    
+    if form.validate_on_submit():
+        # Обрабатываем загрузку изображения
+        image_path = None
+        if form.image.data:
+            image_path = save_image(form.image.data)
+        elif form.image_url.data:
+            image_path = save_image_from_url(form.image_url.data)
+        
+        recipe = Recipe(
+            title=form.title.data,
+            description=form.description.data,
+            ingredients=form.ingredients.data,
+            instructions=form.instructions.data,
+            prep_time=form.prep_time.data,
+            cook_time=form.cook_time.data,
+            servings=form.servings.data,
+            difficulty=form.difficulty.data,
+            cuisine_id=form.cuisine_id.data,
+            user_id=current_user.id,
+            image_url=image_path
+        )
+        
+        # Добавляем категорию, если выбрана
+        if form.categories.data and form.categories.data > 0:
+            category = Category.query.get(form.categories.data)
+            if category:
+                recipe.categories.append(category)
+        
+        db.session.add(recipe)
+        db.session.commit()
+        
+        flash('Рецепт успешно добавлен!', 'success')
+        return redirect(url_for('recipe_detail', recipe_id=recipe.id))
+    
+    return render_template('add_recipe.html', form=form, title='Добавить новый рецепт')
+
+
+@app.route('/edit_recipe/<int:recipe_id>', methods=['GET', 'POST'])
+@login_required
+def edit_recipe(recipe_id):
+    recipe = Recipe.query.get_or_404(recipe_id)
+    
+    # Проверяем права доступа
+    if recipe.user_id != current_user.id and not current_user.is_admin:
+        abort(403)  # Доступ запрещен
+    
+    form = RecipeForm(obj=recipe)
+    form.cuisine_id.choices = [(c.id, c.name) for c in Cuisine.query.all()]
+    
+    # Заполняем категории, если они есть
+    categories = Category.query.all()
+    if categories:
+        form.categories.choices = [(0, 'Без категории')] + [(c.id, c.name) for c in categories]
+        # Устанавливаем текущую категорию
+        current_category = recipe.categories.first()
+        if current_category:
+            form.categories.data = current_category.id
+    
+    if form.validate_on_submit():
+        recipe.title = form.title.data
+        recipe.description = form.description.data
+        recipe.ingredients = form.ingredients.data
+        recipe.instructions = form.instructions.data
+        recipe.prep_time = form.prep_time.data
+        recipe.cook_time = form.cook_time.data
+        recipe.servings = form.servings.data
+        recipe.difficulty = form.difficulty.data
+        recipe.cuisine_id = form.cuisine_id.data
+        
+        # Обрабатываем изображение
+        if form.image.data:
+            recipe.image_url = save_image(form.image.data)
+        elif form.image_url.data and form.image_url.data != recipe.image_url:
+            recipe.image_url = save_image_from_url(form.image_url.data)
+        
+        # Обновляем категорию
+        if form.categories.data != 0:  # Если выбрана категория
+            # Удаляем все текущие категории
+            for cat in list(recipe.categories):
+                recipe.categories.remove(cat)
+            
+            # Добавляем новую категорию
+            new_category = Category.query.get(form.categories.data)
+            if new_category:
+                recipe.categories.append(new_category)
+        
+        db.session.commit()
+        flash('Рецепт успешно обновлен!', 'success')
+        return redirect(url_for('recipe_detail', recipe_id=recipe.id))
+    
+    return render_template('edit_recipe.html', form=form, recipe=recipe, title='Редактировать рецепт')
+
+
+# Маршруты для работы с комментариями
+
+@app.route('/add_comment/<int:recipe_id>', methods=['POST'])
+@login_required
+def add_comment(recipe_id):
+    recipe = Recipe.query.get_or_404(recipe_id)
+    form = CommentForm()
+    
+    if form.validate_on_submit():
+        comment = Comment(
+            content=form.content.data,
+            user_id=current_user.id,
+            recipe_id=recipe_id
+        )
+        db.session.add(comment)
+        db.session.commit()
+        flash('Комментарий добавлен!', 'success')
+    
+    return redirect(url_for('recipe_detail', recipe_id=recipe_id))
+
+
+@app.route('/delete_comment/<int:comment_id>', methods=['POST'])
+@login_required
+def delete_comment(comment_id):
+    comment = Comment.query.get_or_404(comment_id)
+    
+    # Проверяем права доступа (автор комментария или админ)
+    if comment.user_id != current_user.id and not current_user.is_admin:
+        abort(403)
+    
+    recipe_id = comment.recipe_id
+    db.session.delete(comment)
+    db.session.commit()
+    
+    flash('Комментарий удален!', 'success')
+    return redirect(url_for('recipe_detail', recipe_id=recipe_id))
+
+
+# Маршруты для работы с рейтингами
+
+@app.route('/rate_recipe/<int:recipe_id>', methods=['POST'])
+@login_required
+def rate_recipe(recipe_id):
+    recipe = Recipe.query.get_or_404(recipe_id)
+    form = RatingForm()
+    
+    if form.validate_on_submit():
+        # Проверяем, есть ли уже оценка от этого пользователя
+        existing_rating = Rating.query.filter_by(user_id=current_user.id, recipe_id=recipe_id).first()
+        
+        if existing_rating:
+            # Обновляем существующую оценку
+            existing_rating.value = int(form.value.data)
+            db.session.commit()
+            flash('Ваша оценка обновлена!', 'success')
+        else:
+            # Создаем новую оценку
+            rating = Rating(
+                value=int(form.value.data),
+                user_id=current_user.id,
+                recipe_id=recipe_id
+            )
+            db.session.add(rating)
+            db.session.commit()
+            flash('Спасибо за вашу оценку!', 'success')
+    
+    return redirect(url_for('recipe_detail', recipe_id=recipe_id))
+
+
+# Маршруты для работы с фотографиями рецептов
+
+@app.route('/upload_recipe_photos/<int:recipe_id>', methods=['GET', 'POST'])
+@login_required
+def upload_recipe_photos(recipe_id):
+    recipe = Recipe.query.get_or_404(recipe_id)
+    
+    # Проверяем права доступа
+    if recipe.user_id != current_user.id and not current_user.is_admin:
+        abort(403)
+    
+    form = RecipePhotoForm()
+    
+    if form.validate_on_submit() and form.photos.data:
+        # Сохраняем каждое загруженное фото
+        for photo in form.photos.data:
+            if photo and allowed_file(photo.filename):
+                photo_path = save_image(photo)
+                
+                # Создаем запись о фото в БД
+                recipe_photo = RecipePhoto(
+                    url=photo_path,
+                    recipe_id=recipe_id,
+                    user_id=current_user.id
+                )
+                db.session.add(recipe_photo)
+        
+        db.session.commit()
+        flash('Фотографии успешно загружены!', 'success')
+        return redirect(url_for('recipe_detail', recipe_id=recipe_id))
+    
+    return render_template('upload_photos.html', form=form, recipe=recipe)
+
+
+@app.route('/delete_recipe_photo/<int:photo_id>', methods=['POST'])
+@login_required
+def delete_recipe_photo(photo_id):
+    photo = RecipePhoto.query.get_or_404(photo_id)
+    recipe_id = photo.recipe_id
+    
+    # Проверяем права доступа
+    if photo.user_id != current_user.id and not current_user.is_admin:
+        abort(403)
+    
+    # Удаляем файл с диска, если он существует
+    if photo.url and os.path.exists(photo.url):
+        os.remove(photo.url)
+    
+    db.session.delete(photo)
+    db.session.commit()
+    
+    flash('Фотография удалена!', 'success')
+    return redirect(url_for('recipe_detail', recipe_id=recipe_id))
+
+
+# Маршруты для категорий рецептов
+
+@app.route('/admin/add_category', methods=['GET', 'POST'])
+@login_required
+def add_category():
+    # Проверяем права администратора
+    if not current_user.is_admin:
+        abort(403)
+    
+    form = CategoryForm()
+    
+    if form.validate_on_submit():
+        # Проверяем, существует ли уже такая категория
+        existing_category = Category.query.filter_by(name=form.name.data).first()
+        
+        if existing_category:
+            flash('Такая категория уже существует!', 'danger')
+        else:
+            category = Category(name=form.name.data, description=form.description.data)
+            db.session.add(category)
+            db.session.commit()
+            
+            flash('Категория успешно добавлена!', 'success')
+            return redirect(url_for('admin_dashboard'))
+    
+    return render_template('add_category.html', form=form, title='Добавить новую категорию')
+
+
+@app.route('/admin/delete_category/<int:category_id>', methods=['POST'])
+@login_required
+def delete_category(category_id):
+    # Проверяем права администратора
+    if not current_user.is_admin:
+        abort(403)
+    
+    category = Category.query.get_or_404(category_id)
+    
+    # Проверяем, используется ли эта категория
+    if category.recipes.count() > 0:
+        flash(f'Невозможно удалить категорию: с ней связано {category.recipes.count()} рецептов.', 'danger')
+    else:
+        db.session.delete(category)
+        db.session.commit()
+        flash('Категория успешно удалена!', 'success')
+    
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/category/<int:category_id>')
+def category_recipes(category_id):
+    category = Category.query.get_or_404(category_id)
+    
+    # Получаем рецепты из выбранной категории
+    recipes_query = Recipe.query.join(Recipe.categories).filter(Category.id == category_id)
+    
+    # Пагинация
+    page = request.args.get('page', 1, type=int)
+    recipes = recipes_query.paginate(page=page, per_page=9, error_out=False)
+    
+    # Создаем объект формы для поиска
+    form = SearchForm()
+    form.cuisine.choices = [(0, 'Все кухни')] + [(c.id, c.name) for c in Cuisine.query.all()]
+    form.category.choices = [(0, 'Все категории')] + [(c.id, c.name) for c in Category.query.all()]
+    form.category.data = category_id
+    
+    return render_template('recipes.html', 
+                          form=form, 
+                          recipes=recipes, 
+                          category=category, 
+                          cuisines=Cuisine.query.all(),
+                          categories=Category.query.all())
+
+
+# Обновление существующих маршрутов для поддержки расширенного поиска
+
+@app.route('/recipes')
+def recipes():
+    # Инициализируем форму поиска
+    form = SearchForm()
+    
+    # Заполняем выбор кухни и категории
+    cuisines = Cuisine.query.all()
+    form.cuisine.choices = [(0, 'Все кухни')] + [(c.id, c.name) for c in cuisines]
+    
+    categories = Category.query.all()
+    if categories:
+        form.category.choices = [(0, 'Все категории')] + [(c.id, c.name) for c in categories]
+    
+    # Получаем параметры фильтрации
+    cuisine_id = request.args.get('cuisine', 0, type=int)
+    category_id = request.args.get('category', 0, type=int)
+    search_query = request.args.get('query', '')
+    prep_time = request.args.get('prep_time', 0, type=int)
+    difficulty = request.args.get('difficulty', '')
+    sort_by = request.args.get('sort_by', 'newest')
+    
+    # Инициализируем базовый запрос
+    query = Recipe.query
+    
+    # Применяем фильтры
+    if cuisine_id:
+        query = query.filter_by(cuisine_id=cuisine_id)
+        form.cuisine.data = cuisine_id
+    
+    if category_id:
+        query = query.join(Recipe.categories).filter(Category.id == category_id)
+        form.category.data = category_id
+    
+    if search_query:
+        form.query.data = search_query
+        query = query.filter(Recipe.title.ilike(f'%{search_query}%'))
+    
+    if prep_time:
+        form.prep_time.data = prep_time
+        query = query.filter(Recipe.prep_time <= prep_time)
+    
+    if difficulty:
+        form.difficulty.data = difficulty
+        query = query.filter(Recipe.difficulty == difficulty)
+    
+    # Применяем сортировку
+    if sort_by == 'newest':
+        query = query.order_by(Recipe.created_at.desc())
+    elif sort_by == 'popular':
+        # Сортировка по количеству избранных
+        query = query.outerjoin(Favorite).group_by(Recipe.id).order_by(func.count(Favorite.id).desc())
+    elif sort_by == 'rating':
+        # Сортировка по среднему рейтингу
+        query = query.outerjoin(Rating).group_by(Recipe.id).order_by(func.avg(Rating.value).desc().nullslast())
+    
+    form.sort_by.data = sort_by
+    
+    # Получаем рецепты с пагинацией
+    page = request.args.get('page', 1, type=int)
+    per_page = 9  # Количество рецептов на странице
+    recipes_pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    
+    return render_template('recipes.html', 
+                          form=form, 
+                          recipes=recipes_pagination, 
+                          cuisines=cuisines,
+                          categories=categories if categories else None)
+
+
+# Маршрут для расшаривания рецепта в социальных сетях
+@app.route('/share/<int:recipe_id>')
+def share_recipe(recipe_id):
+    recipe = Recipe.query.get_or_404(recipe_id)
+    
+    # Генерируем URL для расшаривания
+    recipe_url = url_for('recipe_detail', recipe_id=recipe_id, _external=True)
+    
+    # Подготавливаем параметры для разных соцсетей
+    share_links = {
+        'vk': f'https://vk.com/share.php?url={recipe_url}&title={recipe.title}',
+        'telegram': f'https://t.me/share/url?url={recipe_url}&text={recipe.title}',
+        'twitter': f'https://twitter.com/intent/tweet?url={recipe_url}&text={recipe.title}',
+        'facebook': f'https://www.facebook.com/sharer/sharer.php?u={recipe_url}'
+    }
+    
+    return render_template('share.html', recipe=recipe, share_links=share_links)
+
+
+# Получение изображений из директории uploads
+@app.route('/uploads/<path:filename>')
+def uploaded_file(filename):
+    return send_from_directory('static/uploads', filename)
 
 
 # Error handlers
