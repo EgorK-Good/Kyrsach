@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}My Profile - Recipe Journey{% endblock %}
+{% block title %}Мой Профиль - Путешествие через рецепты{% endblock %}
 
 {% block content %}
 <div class="container py-5">
@@ -9,13 +9,13 @@
         <div class="col-md-4 mb-4">
             <div class="card shadow-custom">
                 <div class="card-body">
-                    <h2 class="card-title text-center mb-4">My Profile</h2>
+                    <h2 class="card-title text-center mb-4">Мой Профиль</h2>
                     <div class="text-center mb-4">
                         <i class="fas fa-user-circle fa-5x text-accent"></i>
                     </div>
                     <ul class="list-group list-group-flush mb-4">
                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span><i class="fas fa-user me-2 text-accent"></i> Username</span>
+                            <span><i class="fas fa-user me-2 text-accent"></i> Имя пользователя</span>
                             <span class="text-muted">{{ current_user.username }}</span>
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -23,20 +23,20 @@
                             <span class="text-muted">{{ current_user.email }}</span>
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span><i class="fas fa-calendar-alt me-2 text-accent"></i> Joined</span>
-                            <span class="text-muted">{{ current_user.date_joined.strftime('%B %d, %Y') }}</span>
+                            <span><i class="fas fa-calendar-alt me-2 text-accent"></i> Дата регистрации</span>
+                            <span class="text-muted">{{ current_user.date_joined.strftime('%d.%m.%Y') }}</span>
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span><i class="fas fa-book me-2 text-accent"></i> Recipes</span>
+                            <span><i class="fas fa-book me-2 text-accent"></i> Рецепты</span>
                             <span class="badge bg-accent rounded-pill">{{ user_recipes|length }}</span>
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span><i class="fas fa-heart me-2 text-accent"></i> Favorites</span>
+                            <span><i class="fas fa-heart me-2 text-accent"></i> Избранное</span>
                             <span class="badge bg-accent rounded-pill">{{ favorite_recipes|length }}</span>
                         </li>
                     </ul>
                     <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#editProfileModal">
-                        Edit Profile
+                        Редактировать профиль
                     </button>
                 </div>
             </div>
@@ -49,12 +49,12 @@
                     <ul class="nav nav-tabs mb-4" id="profileTabs" role="tablist">
                         <li class="nav-item" role="presentation">
                             <button class="nav-link active" id="recipes-tab" data-bs-toggle="tab" data-bs-target="#recipes" type="button" role="tab" aria-controls="recipes" aria-selected="true">
-                                My Recipes
+                                Мои рецепты
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" id="favorites-tab" data-bs-toggle="tab" data-bs-target="#favorites" type="button" role="tab" aria-controls="favorites" aria-selected="false">
-                                Favorites
+                                Избранное
                             </button>
                         </li>
                     </ul>
@@ -64,7 +64,7 @@
                             {% if user_recipes %}
                                 <div class="d-grid gap-3 mb-4">
                                     <a href="{{ url_for('add_recipe') }}" class="btn btn-primary">
-                                        <i class="fas fa-plus me-2"></i>Add New Recipe
+                                        <i class="fas fa-plus me-2"></i>Добавить новый рецепт
                                     </a>
                                 </div>
                                 <div class="row">
@@ -73,12 +73,12 @@
                                             <div class="card h-100">
                                                 <div class="card-body">
                                                     <h5 class="card-title">{{ recipe.title }}</h5>
-                                                    <p class="card-subtitle mb-2 text-muted">{{ recipe.cuisine.name }} Cuisine</p>
+                                                    <p class="card-subtitle mb-2 text-muted">{{ recipe.cuisine.name }} кухня</p>
                                                     <p class="card-text">{{ recipe.description[:100] }}{% if recipe.description|length > 100 %}...{% endif %}</p>
                                                 </div>
                                                 <div class="card-footer bg-white">
                                                     <div class="d-flex justify-content-between align-items-center">
-                                                        <a href="{{ url_for('recipe_detail', recipe_id=recipe.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+                                                        <a href="{{ url_for('recipe_detail', recipe_id=recipe.id) }}" class="btn btn-sm btn-outline-primary">Посмотреть</a>
                                                         <div>
                                                             <a href="{{ url_for('edit_recipe', recipe_id=recipe.id) }}" class="btn btn-sm btn-outline-secondary me-1">
                                                                 <i class="fas fa-edit"></i>
@@ -98,10 +98,10 @@
                             {% else %}
                                 <div class="text-center py-5">
                                     <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
-                                    <h3>No recipes yet</h3>
-                                    <p class="text-muted">You haven't added any recipes yet. Share your culinary creations with the community!</p>
+                                    <h3>Рецептов пока нет</h3>
+                                    <p class="text-muted">Вы еще не добавили ни одного рецепта. Поделитесь своими кулинарными творениями с сообществом!</p>
                                     <a href="{{ url_for('add_recipe') }}" class="btn btn-primary mt-2">
-                                        <i class="fas fa-plus me-2"></i>Add Your First Recipe
+                                        <i class="fas fa-plus me-2"></i>Добавить свой первый рецепт
                                     </a>
                                 </div>
                             {% endif %}
@@ -116,12 +116,12 @@
                                             <div class="card h-100">
                                                 <div class="card-body">
                                                     <h5 class="card-title">{{ recipe.title }}</h5>
-                                                    <p class="card-subtitle mb-2 text-muted">{{ recipe.cuisine.name }} Cuisine</p>
+                                                    <p class="card-subtitle mb-2 text-muted">{{ recipe.cuisine.name }} кухня</p>
                                                     <p class="card-text">{{ recipe.description[:100] }}{% if recipe.description|length > 100 %}...{% endif %}</p>
                                                 </div>
                                                 <div class="card-footer bg-white">
                                                     <div class="d-flex justify-content-between align-items-center">
-                                                        <a href="{{ url_for('recipe_detail', recipe_id=recipe.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+                                                        <a href="{{ url_for('recipe_detail', recipe_id=recipe.id) }}" class="btn btn-sm btn-outline-primary">Посмотреть</a>
                                                         <form action="{{ url_for('toggle_favorite', recipe_id=recipe.id) }}" method="POST" class="d-inline">
                                                             <button type="submit" class="btn btn-favorite active" data-recipe-id="{{ recipe.id }}">
                                                                 <i class="fas fa-heart"></i>
@@ -136,10 +136,10 @@
                             {% else %}
                                 <div class="text-center py-5">
                                     <i class="far fa-heart fa-3x text-muted mb-3"></i>
-                                    <h3>No favorites yet</h3>
-                                    <p class="text-muted">You haven't added any recipes to your favorites yet.</p>
+                                    <h3>Избранного пока нет</h3>
+                                    <p class="text-muted">Вы еще не добавили ни одного рецепта в избранное.</p>
                                     <a href="{{ url_for('recipes') }}" class="btn btn-primary mt-2">
-                                        <i class="fas fa-search me-2"></i>Explore Recipes
+                                        <i class="fas fa-search me-2"></i>Просмотреть рецепты
                                     </a>
                                 </div>
                             {% endif %}
@@ -156,7 +156,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editProfileModalLabel">Edit Profile</h5>
+                <h5 class="modal-title" id="editProfileModalLabel">Редактировать профиль</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="POST" action="{{ url_for('profile') }}">
@@ -186,7 +186,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
                     {{ form.submit(class="btn btn-primary") }}
                 </div>
             </form>
