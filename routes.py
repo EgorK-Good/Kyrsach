@@ -182,15 +182,14 @@ def cuisine_recipes(cuisine_id):
     cuisine = Cuisine.query.get_or_404(cuisine_id)
     page = request.args.get('page', 1, type=int)
     
-    # Фильтрация рецептов по выбранной кухне
-    recipes = Recipe.query.filter_by(cuisine_id=cuisine_id).paginate(page=page, per_page=9, error_out=False)
+    # Получаем рецепты для выбранной кухни, сортируя по новизне
+    query = Recipe.query.filter_by(cuisine_id=cuisine_id).order_by(Recipe.created_at.desc())
+    recipes = query.paginate(page=page, per_page=9, error_out=False)
     
-    # Создаем объект формы для поиска, но предустанавливаем фильтр по текущей кухне
+    # Простая форма поиска только с полем запроса
     form = SearchForm()
-    form.cuisine.choices = [(0, 'Все кухни')] + [(c.id, c.name) for c in Cuisine.query.all()]
-    form.cuisine.data = cuisine_id  # Предварительно выбираем текущую кухню
     
-    # Используем тот же шаблон, но передаем текущую кухню для контекста
+    # Используем тот же шаблон для отображения
     return render_template('recipes.html', 
                            form=form, 
                            recipes=recipes, 
@@ -648,49 +647,37 @@ def delete_category(category_id):
 def category_recipes(category_id):
     category = Category.query.get_or_404(category_id)
     
-    # Получаем рецепты из выбранной категории
-    recipes_query = Recipe.query.join(Recipe.categories).filter(Category.id == category_id)
+    # Получаем рецепты из выбранной категории, сортируя по новизне
+    recipes_query = Recipe.query.join(Recipe.categories).filter(Category.id == category_id).order_by(Recipe.created_at.desc())
     
     # Пагинация
     page = request.args.get('page', 1, type=int)
     recipes = recipes_query.paginate(page=page, per_page=9, error_out=False)
     
-    # Создаем объект формы для поиска
+    # Простая форма поиска
     form = SearchForm()
-    form.cuisine.choices = [(0, 'Все кухни')] + [(c.id, c.name) for c in Cuisine.query.all()]
-    form.category.choices = [(0, 'Все категории')] + [(c.id, c.name) for c in Category.query.all()]
-    form.category.data = category_id
     
     return render_template('recipes.html', 
                           form=form, 
                           recipes=recipes, 
-                          category=category, 
-                          cuisines=Cuisine.query.all(),
-                          categories=Category.query.all())
+                          category=category,
+                          title=f"Категория: {category.name}")
 
 
-# Обновление существующих маршрутов для поддержки расширенного поиска
+# Упрощенный маршрут для отображения рецептов
 
 @app.route('/recipes')
 def recipes():
     # Инициализируем форму поиска
     form = SearchForm()
     
-    # Заполняем выбор кухни и категории
+    # Заполняем выбор кухни
     cuisines = Cuisine.query.all()
     form.cuisine.choices = [(0, 'Все кухни')] + [(c.id, c.name) for c in cuisines]
     
-    categories = Category.query.all()
-    if categories:
-        form.category.choices = [(0, 'Все категории')] + [(c.id, c.name) for c in categories]
-    
     # Получаем параметры фильтрации
     cuisine_id = request.args.get('cuisine', 0, type=int)
-    category_id = request.args.get('category', 0, type=int)
     search_query = request.args.get('query', '')
-    prep_time = request.args.get('prep_time', 0, type=int)
-    difficulty = request.args.get('difficulty', '')
-    sort_by = request.args.get('sort_by', 'newest')
     
     # Инициализируем базовый запрос
     query = Recipe.query
@@ -700,33 +687,12 @@ def recipes():
         query = query.filter_by(cuisine_id=cuisine_id)
         form.cuisine.data = cuisine_id
     
-    if category_id:
-        query = query.join(Recipe.categories).filter(Category.id == category_id)
-        form.category.data = category_id
-    
     if search_query:
         form.query.data = search_query
         query = query.filter(Recipe.title.ilike(f'%{search_query}%'))
     
-    if prep_time:
-        form.prep_time.data = prep_time
-        query = query.filter(Recipe.prep_time <= prep_time)
-    
-    if difficulty:
-        form.difficulty.data = difficulty
-        query = query.filter(Recipe.difficulty == difficulty)
-    
-    # Применяем сортировку
-    if sort_by == 'newest':
-        query = query.order_by(Recipe.created_at.desc())
-    elif sort_by == 'popular':
-        # Сортировка по количеству избранных
-        query = query.outerjoin(Favorite).group_by(Recipe.id).order_by(func.count(Favorite.id).desc())
-    elif sort_by == 'rating':
-        # Сортировка по среднему рейтингу
-        query = query.outerjoin(Rating).group_by(Recipe.id).order_by(func.avg(Rating.value).desc().nullslast())
-    
-    form.sort_by.data = sort_by
+    # Сортировка по новизне (по умолчанию)
+    query = query.order_by(Recipe.created_at.desc())
     
     # Получаем рецепты с пагинацией
     page = request.args.get('page', 1, type=int)
@@ -736,8 +702,7 @@ def recipes():
     return render_template('recipes.html', 
                           form=form, 
                           recipes=recipes_pagination, 
-                          cuisines=cuisines,
-                          categories=categories if categories else None)
+                          cuisines=cuisines)
 
 
 # Маршрут для расшаривания рецепта в социальных сетях

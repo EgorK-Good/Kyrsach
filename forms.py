@@ -62,26 +62,6 @@ class CategoryForm(FlaskForm):
 class SearchForm(FlaskForm):
     query = StringField('Поиск рецептов', validators=[Optional()])
     cuisine = SelectField('Кухня', coerce=int, validators=[Optional()], default=0)
-    category = SelectField('Категория', coerce=int, validators=[Optional()], default=0)
-    prep_time = SelectField('Время подготовки', choices=[
-        (0, 'Любое время'),
-        (15, 'До 15 минут'),
-        (30, 'До 30 минут'),
-        (60, 'До 1 часа'),
-        (120, 'До 2 часов')
-    ], coerce=int, validators=[Optional()], default=0)
-    difficulty = SelectField('Сложность', choices=[
-        ('', 'Любая сложность'),
-        ('Легкий', 'Легкий'),
-        ('Средний', 'Средний'),
-        ('Сложный', 'Сложный')
-    ], validators=[Optional()], default='')
-    # Сортировка
-    sort_by = SelectField('Сортировать по', choices=[
-        ('newest', 'Новые'),
-        ('popular', 'Популярные'),
-        ('rating', 'Высокий рейтинг')
-    ], default='newest')
     submit = SubmitField('Поиск')
 
 
