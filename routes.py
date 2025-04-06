@@ -1,7 +1,6 @@
-from flask import render_template, flash, redirect, url_for, request, abort, jsonify, current_app, send_from_directory
+from flask import render_template, flash, redirect, url_for, request, abort, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.utils import secure_filename
 from app import app, db
 from models import User, Recipe, Cuisine, Favorite, Comment, Rating, Category, RecipePhoto
 from forms import (LoginForm, RegistrationForm, RecipeForm, CuisineForm, SearchForm,
@@ -10,10 +9,6 @@ import logging
 import os
 from datetime import datetime
 from sqlalchemy import func, desc
-import uuid
-import requests
-from io import BytesIO
-from PIL import Image
 
 
 @app.route('/')
@@ -329,63 +324,7 @@ def admin_delete_user(user_id):
     return redirect(url_for('admin_dashboard'))
 
 
-# Функции для обработки загрузки файлов
-def allowed_file(filename):
-    """Проверяет, разрешено ли загружать файл с данным расширением"""
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-def save_image(file, folder='recipe_images'):
-    """Сохраняет загруженное изображение и возвращает путь к нему"""
-    if not file:
-        return None
-    
-    filename = secure_filename(file.filename)
-    # Добавляем уникальный идентификатор к имени файла
-    unique_filename = f"{uuid.uuid4().hex}_{filename}"
-    
-    # Создаем папку для сохранения, если её нет
-    upload_folder = os.path.join('static', 'uploads', folder)
-    os.makedirs(upload_folder, exist_ok=True)
-    
-    # Полный путь для сохранения файла
-    file_path = os.path.join(upload_folder, unique_filename)
-    
-    # Сохраняем изображение
-    file.save(file_path)
-    
-    # Возвращаем URL путь для сохранения в БД и отображения на сайте
-    url_path = url_for('uploaded_file', folder=folder, filename=unique_filename, _external=True)
-    
-    return url_path
-
-def save_image_from_url(url, folder='recipe_images'):
-    """Загружает изображение по URL и сохраняет его"""
-    try:
-        response = requests.get(url, timeout=5)
-        response.raise_for_status()
-        
-        # Создаем уникальное имя файла
-        filename = f"{uuid.uuid4().hex}.jpg"
-        
-        # Создаем папку для сохранения, если её нет
-        upload_folder = os.path.join('static', 'uploads', folder)
-        os.makedirs(upload_folder, exist_ok=True)
-        
-        # Полный путь для сохранения файла
-        file_path = os.path.join(upload_folder, filename)
-        
-        # Открываем изображение и сохраняем его
-        image = Image.open(BytesIO(response.content))
-        image.save(file_path)
-        
-        # Возвращаем URL путь для сохранения в БД и отображения на сайте
-        url_path = url_for('uploaded_file', folder=folder, filename=filename, _external=True)
-        
-        return url_path
-    except Exception as e:
-        logging.error(f"Ошибка при загрузке изображения с URL: {e}")
-        return None
+# Эти функции больше не используются, так как мы теперь используем прямые URL-ссылки на изображения
 
 
 # Маршруты для расширенных функций рецептов
@@ -444,13 +383,6 @@ def add_recipe():
         form.categories.choices = [(0, 'Без категории')] + [(c.id, c.name) for c in categories]
     
     if form.validate_on_submit():
-        # Обрабатываем загрузку изображения
-        image_path = None
-        if form.image.data:
-            image_path = save_image(form.image.data)
-        elif form.image_url.data:
-            image_path = save_image_from_url(form.image_url.data)
-        
         recipe = Recipe(
             title=form.title.data,
             description=form.description.data,
@@ -462,7 +394,7 @@ def add_recipe():
             difficulty=form.difficulty.data,
             cuisine_id=form.cuisine_id.data,
             user_id=current_user.id,
-            image_url=image_path
+            image_url=form.image_url.data  # Просто сохраняем URL изображения
         )
         
         # Добавляем категорию, если выбрана
@@ -512,11 +444,8 @@ def edit_recipe(recipe_id):
         recipe.difficulty = form.difficulty.data
         recipe.cuisine_id = form.cuisine_id.data
         
-        # Обрабатываем изображение
-        if form.image.data:
-            recipe.image_url = save_image(form.image.data)
-        elif form.image_url.data and form.image_url.data != recipe.image_url:
-            recipe.image_url = save_image_from_url(form.image_url.data)
+        # Обновляем URL изображения
+        recipe.image_url = form.image_url.data
         
         # Обновляем категорию
         if form.categories.data != 0:  # Если выбрана категория
@@ -618,22 +547,18 @@ def upload_recipe_photos(recipe_id):
     
     form = RecipePhotoForm()
     
-    if form.validate_on_submit() and form.photos.data:
-        # Сохраняем каждое загруженное фото
-        for photo in form.photos.data:
-            if photo and allowed_file(photo.filename):
-                photo_path = save_image(photo)
-                
-                # Создаем запись о фото в БД
-                recipe_photo = RecipePhoto(
-                    url=photo_path,
-                    recipe_id=recipe_id,
-                    user_id=current_user.id
-                )
-                db.session.add(recipe_photo)
-        
+    if form.validate_on_submit():
+        # Создаем запись о фото в БД
+        recipe_photo = RecipePhoto(
+            url=form.photo_url.data,
+            caption=form.caption.data,
+            recipe_id=recipe_id,
+            user_id=current_user.id
+        )
+        db.session.add(recipe_photo)
         db.session.commit()
-        flash('Фотографии успешно загружены!', 'success')
+        
+        flash('Фотография успешно добавлена!', 'success')
         return redirect(url_for('recipe_detail', recipe_id=recipe_id))
     
     return render_template('upload_photos.html', form=form, recipe=recipe)
@@ -819,10 +744,7 @@ def share_recipe(recipe_id):
     return render_template('share.html', recipe=recipe, share_links=share_links)
 
 
-# Получение изображений из директории uploads
-@app.route('/uploads/<path:folder>/<path:filename>')
-def uploaded_file(folder, filename):
-    return send_from_directory(os.path.join('static/uploads', folder), filename)
+# Этот маршрут больше не используется, так как мы теперь используем прямые URL-ссылки на изображения
 
 
 # Error handlers

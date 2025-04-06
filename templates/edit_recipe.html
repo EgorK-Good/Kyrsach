@@ -38,8 +38,33 @@
                         
                         <div class="row mb-3">
                             <div class="col-md-6">
+                                {{ form.cuisine_id.label(class="form-label") }}
+                                {{ form.cuisine_id(class="form-select") }}
+                                {% if form.cuisine_id.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.cuisine_id.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.categories.label(class="form-label") }}
+                                {{ form.categories(class="form-select") }}
+                                {% if form.categories.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.categories.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
                                 {{ form.prep_time.label(class="form-label") }}
-                                {{ form.prep_time(class="form-control") }}
+                                {{ form.prep_time(class="form-control", type="number") }}
                                 {% if form.prep_time.errors %}
                                     <div class="text-danger">
                                         {% for error in form.prep_time.errors %}
@@ -50,7 +75,7 @@
                             </div>
                             <div class="col-md-6">
                                 {{ form.cook_time.label(class="form-label") }}
-                                {{ form.cook_time(class="form-control") }}
+                                {{ form.cook_time(class="form-control", type="number") }}
                                 {% if form.cook_time.errors %}
                                     <div class="text-danger">
                                         {% for error in form.cook_time.errors %}
@@ -64,7 +89,7 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 {{ form.servings.label(class="form-label") }}
-                                {{ form.servings(class="form-control") }}
+                                {{ form.servings(class="form-control", type="number") }}
                                 {% if form.servings.errors %}
                                     <div class="text-danger">
                                         {% for error in form.servings.errors %}
@@ -84,18 +109,6 @@
                                     </div>
                                 {% endif %}
                             </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            {{ form.cuisine_id.label(class="form-label") }}
-                            {{ form.cuisine_id(class="form-select") }}
-                            {% if form.cuisine_id.errors %}
-                                <div class="text-danger">
-                                    {% for error in form.cuisine_id.errors %}
-                                        <small>{{ error }}</small>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
                         </div>
                         
                         <div class="mb-3">
@@ -121,6 +134,21 @@
                                         <small>{{ error }}</small>
                                     {% endfor %}
                                 </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-4">
+                            {{ form.image_url.label(class="form-label") }}
+                            {{ form.image_url(class="form-control") }}
+                            {% if form.image_url.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.image_url.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if form.image_url.description %}
+                                <small class="form-text text-muted">{{ form.image_url.description }}</small>
                             {% endif %}
                         </div>
                         

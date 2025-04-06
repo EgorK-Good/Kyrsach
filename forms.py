@@ -1,6 +1,5 @@
 from flask_wtf import FlaskForm
-from flask_wtf.file import FileField, FileAllowed
-from wtforms import StringField, PasswordField, TextAreaField, IntegerField, SelectField, SubmitField, BooleanField, MultipleFileField, HiddenField
+from wtforms import StringField, PasswordField, TextAreaField, IntegerField, SelectField, SubmitField, BooleanField, HiddenField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional, NumberRange, URL, ValidationError
 
 
@@ -35,21 +34,17 @@ class RecipeForm(FlaskForm):
     cuisine_id = SelectField('Кухня', coerce=int, validators=[DataRequired()])
     # Поле для выбора категорий (для расширенной фильтрации)
     categories = SelectField('Категория блюда', choices=[], coerce=int, validators=[Optional()])
-    # Поле для загрузки основного изображения
-    image = FileField('Основное изображение', validators=[
-        Optional(),
-        FileAllowed(['jpg', 'jpeg', 'png'], 'Пожалуйста, загружайте только изображения') 
-    ])
-    # URL основного изображения (для загрузки через URL)
-    image_url = StringField('URL изображения', validators=[Optional(), URL()])
+    # URL основного изображения
+    image_url = StringField('URL изображения', validators=[DataRequired(), URL()], 
+                           description='Введите URL адрес изображения (например, https://example.com/image.jpg)')
     submit = SubmitField('Сохранить рецепт')
 
 
 class RecipePhotoForm(FlaskForm):
-    photos = MultipleFileField('Добавить дополнительные фотографии', validators=[
-        FileAllowed(['jpg', 'jpeg', 'png'], 'Пожалуйста, загружайте только изображения')
-    ])
-    submit = SubmitField('Загрузить фотографии')
+    photo_url = StringField('URL изображения', validators=[DataRequired(), URL()], 
+                          description='Введите URL адрес изображения (например, https://example.com/image.jpg)')
+    caption = StringField('Подпись к фотографии', validators=[Optional(), Length(max=128)])
+    submit = SubmitField('Добавить фотографию')
 
 
 class CuisineForm(FlaskForm):
