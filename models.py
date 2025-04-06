@@ -64,8 +64,8 @@ class Recipe(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     cuisine_id = db.Column(db.Integer, db.ForeignKey('cuisine.id'))
     
-    # Для загрузки фотографий
-    image_url = db.Column(db.String(256), nullable=True)
+    # Для загрузки фотографий (увеличена длина до 1024 символов)
+    image_url = db.Column(db.String(1024), nullable=True)
     
     # Связи с другими таблицами
     favorites = db.relationship('Favorite', backref='recipe', lazy='dynamic', cascade='all, delete-orphan')
@@ -129,7 +129,7 @@ class Rating(db.Model):
 
 class RecipePhoto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    url = db.Column(db.String(256), nullable=False)
+    url = db.Column(db.String(1024), nullable=False)  # Увеличена длина до 1024 символов
     caption = db.Column(db.String(128), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'), nullable=False)
