@@ -48,6 +48,11 @@
                     {% for recipe in featured_recipes %}
                         <div class="col-lg-4 col-md-6 mb-4">
                             <div class="card h-100 animate-on-scroll">
+                                {% if recipe.image_url %}
+                                <div class="card-img-top-container">
+                                    <img src="{{ recipe.image_url }}" alt="{{ recipe.title }}" class="card-img-top">
+                                </div>
+                                {% endif %}
                                 <div class="card-body">
                                     <h3 class="card-title">{{ recipe.title }}</h3>
                                     <p class="card-subtitle">{{ recipe.cuisine.name }} кухня</p>
@@ -98,8 +103,8 @@
                 <div class="card h-100 animate-on-scroll">
                     <div class="card-body text-center">
                         <i class="fas fa-globe-americas fa-3x text-accent mb-3"></i>
-                        <h3 class="card-title">Исследуйте аутентичные кухни</h3>
-                        <p class="card-text">Откройте для себя рецепты русской, армянской, японской и итальянской кулинарных традиций с аутентичными способами приготовления и ингредиентами.</p>
+                        <h3 class="card-title">Откройте новые культуры</h3>
+                        <p class="card-text">Исследуйте аутентичные блюда со всего мира и погрузитесь в их богатую историю и традиции.</p>
                     </div>
                 </div>
             </div>
@@ -107,25 +112,103 @@
                 <div class="card h-100 animate-on-scroll">
                     <div class="card-body text-center">
                         <i class="fas fa-users fa-3x text-accent mb-3"></i>
-                        <h3 class="card-title">Присоединяйтесь к нашему сообществу</h3>
-                        <p class="card-text">Общайтесь с любителями еды со всего мира, делитесь своими рецептами и учитесь на кулинарном опыте других.</p>
+                        <h3 class="card-title">Присоединяйтесь к сообществу</h3>
+                        <p class="card-text">Станьте частью растущего сообщества любителей кулинарии, делитесь опытом и вдохновляйтесь.</p>
                     </div>
                 </div>
             </div>
             <div class="col-md-4 mb-4">
                 <div class="card h-100 animate-on-scroll">
                     <div class="card-body text-center">
-                        <i class="fas fa-book-open fa-3x text-accent mb-3"></i>
-                        <h3 class="card-title">Сохраняйте избранное</h3>
-                        <p class="card-text">Создайте свою личную коллекцию рецептов, сохраняя любимые блюда для быстрого доступа и будущих кулинарных приключений.</p>
+                        <i class="fas fa-utensils fa-3x text-accent mb-3"></i>
+                        <h3 class="card-title">Совершенствуйте навыки</h3>
+                        <p class="card-text">Пошаговые инструкции и советы помогут вам освоить новые кулинарные техники и рецепты.</p>
                     </div>
                 </div>
             </div>
         </div>
-        {% if not current_user.is_authenticated %}
-            <div class="text-center mt-4">
-                <a href="{{ url_for('register') }}" class="btn btn-primary">Присоединиться</a>
-            </div>
-        {% endif %}
     </section>
+
+    <!-- Call To Action -->
+    <section class="cta bg-primary text-white py-5">
+        <div class="container text-center">
+            <h2 class="mb-3">Готовы начать кулинарное путешествие?</h2>
+            <p class="lead mb-4">Присоединяйтесь к нам сегодня и откройте для себя новый мир вкусов!</p>
+            <div class="d-grid gap-2 d-md-block">
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('add_recipe') }}" class="btn btn-light btn-lg px-4 me-md-2">Добавить свой рецепт</a>
+                {% else %}
+                    <a href="{{ url_for('register') }}" class="btn btn-light btn-lg px-4 me-md-2">Регистрация</a>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg px-4">Вход</a>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Инициализация подсказок Bootstrap
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+        
+        // Обработка нажатия на кнопку "Добавить в избранное"
+        const favoriteButtons = document.querySelectorAll('.btn-favorite');
+        favoriteButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const recipeId = this.getAttribute('data-recipe-id');
+                fetch(`/toggle_favorite/${recipeId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        this.classList.toggle('active');
+                        const icon = this.querySelector('i');
+                        icon.classList.toggle('fa-heart-o');
+                        icon.classList.toggle('fa-heart');
+                        
+                        // Обновляем текст подсказки
+                        const tooltip = bootstrap.Tooltip.getInstance(this);
+                        if (tooltip) {
+                            this.setAttribute('data-bs-original-title', 
+                                this.classList.contains('active') ? 'Удалить из избранного' : 'Добавить в избранное');
+                            tooltip.update();
+                        }
+                        
+                        showToast(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+        });
+        
+        // Анимация при прокрутке
+        const animateElements = document.querySelectorAll('.animate-on-scroll');
+        
+        function checkIfInView() {
+            animateElements.forEach(element => {
+                const elementTop = element.getBoundingClientRect().top;
+                const elementVisible = 150;
+                
+                if (elementTop < window.innerHeight - elementVisible) {
+                    element.classList.add('visible');
+                }
+            });
+        }
+        
+        window.addEventListener('scroll', checkIfInView);
+        checkIfInView(); // Запускаем один раз при загрузке страницы
+    });
+</script>
 {% endblock %}
