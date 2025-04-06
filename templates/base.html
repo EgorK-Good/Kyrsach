@@ -8,13 +8,17 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     {% block styles %}{% endblock %}
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
+    <nav class="navbar navbar-expand-lg navbar-light sticky-top">
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('index') }}">
                 <i class="fas fa-utensils me-2"></i>Путешествие через рецепты
@@ -28,49 +32,46 @@
                         <a class="nav-link {% if request.path == url_for('index') %}active{% endif %}" href="{{ url_for('index') }}">Главная</a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle" href="#" id="cuisinesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Кухни
                         </a>
-                        <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                        <ul class="dropdown-menu" aria-labelledby="cuisinesDropdown">
                             <li><a class="dropdown-item" href="{{ url_for('recipes') }}">Все кухни</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            {% for cuisine in cuisines %}
+                            {% for cuisine in g.all_cuisines %}
                                 <li><a class="dropdown-item" href="{{ url_for('cuisine_recipes', cuisine_id=cuisine.id) }}">{{ cuisine.name }}</a></li>
                             {% endfor %}
                         </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == url_for('recipes') %}active{% endif %}" href="{{ url_for('recipes') }}">Рецепты</a>
                     </li>
                     {% if current_user.is_authenticated %}
                         <li class="nav-item">
                             <a class="nav-link {% if request.path == url_for('add_recipe') %}active{% endif %}" href="{{ url_for('add_recipe') }}">Добавить рецепт</a>
                         </li>
-                        {% if current_user.is_admin %}
-                            <li class="nav-item">
-                                <a class="nav-link {% if request.path == url_for('admin_dashboard') %}active{% endif %}" href="{{ url_for('admin_dashboard') }}">Администрирование</a>
-                            </li>
-                        {% endif %}
                     {% endif %}
                 </ul>
-                <ul class="navbar-nav">
+                <div class="navbar-nav">
                     {% if current_user.is_authenticated %}
-                        <li class="nav-item dropdown">
+                        <div class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fas fa-user-circle me-1"></i>{{ current_user.username }}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                                 <li><a class="dropdown-item" href="{{ url_for('profile') }}">Мой профиль</a></li>
+                                {% if current_user.is_admin %}
+                                    <li><a class="dropdown-item" href="{{ url_for('admin_dashboard') }}">Админ-панель</a></li>
+                                {% endif %}
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{{ url_for('logout') }}">Выйти</a></li>
                             </ul>
-                        </li>
+                        </div>
                     {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.path == url_for('login') %}active{% endif %}" href="{{ url_for('login') }}">Войти</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.path == url_for('register') %}active{% endif %}" href="{{ url_for('register') }}">Регистрация</a>
-                        </li>
+                        <a class="nav-link" href="{{ url_for('login') }}">Вход</a>
+                        <a class="nav-link" href="{{ url_for('register') }}">Регистрация</a>
                     {% endif %}
-                </ul>
+                </div>
             </div>
         </div>
     </nav>
@@ -90,56 +91,58 @@
     {% endwith %}
 
     <!-- Main Content -->
-    <main>
-        {% block content %}{% endblock %}
-    </main>
+    {% block content %}{% endblock %}
 
     <!-- Footer -->
-    <footer>
+    <footer class="footer py-4 mt-5">
         <div class="container">
             <div class="row">
-                <div class="col-md-4 mb-4">
-                    <h5 class="footer-heading">О проекте</h5>
-                    <p>Откройте для себя мир через его вкусы. Наша платформа позволяет исследовать аутентичные рецепты из разных кухонь мира.</p>
-                    <div class="social-icons">
-                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
-                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                        <a href="#" aria-label="Pinterest"><i class="fab fa-pinterest"></i></a>
-                    </div>
+                <div class="col-md-4 mb-3">
+                    <h5>Путешествие через рецепты</h5>
+                    <p>Исследуйте кулинарные традиции со всего мира. Добавляйте свои рецепты и пробуйте новые вкусы!</p>
                 </div>
-                <div class="col-md-4 mb-4">
-                    <h5 class="footer-heading">Кухни мира</h5>
+                <div class="col-md-4 mb-3">
+                    <h5>Навигация</h5>
                     <ul class="list-unstyled">
-                        {% for cuisine in cuisines %}
-                            <li><a href="{{ url_for('cuisine_recipes', cuisine_id=cuisine.id) }}" class="footer-link">{{ cuisine.name }} кухня</a></li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <h5 class="footer-heading">Быстрые ссылки</h5>
-                    <ul class="list-unstyled">
-                        <li><a href="{{ url_for('index') }}" class="footer-link">Главная</a></li>
-                        <li><a href="{{ url_for('recipes') }}" class="footer-link">Все рецепты</a></li>
+                        <li><a href="{{ url_for('index') }}">Главная</a></li>
+                        <li><a href="{{ url_for('recipes') }}">Рецепты</a></li>
                         {% if current_user.is_authenticated %}
-                            <li><a href="{{ url_for('profile') }}" class="footer-link">Мой профиль</a></li>
-                            <li><a href="{{ url_for('add_recipe') }}" class="footer-link">Добавить рецепт</a></li>
+                            <li><a href="{{ url_for('profile') }}">Мой профиль</a></li>
+                            <li><a href="{{ url_for('add_recipe') }}">Добавить рецепт</a></li>
                         {% else %}
-                            <li><a href="{{ url_for('login') }}" class="footer-link">Войти</a></li>
-                            <li><a href="{{ url_for('register') }}" class="footer-link">Регистрация</a></li>
+                            <li><a href="{{ url_for('login') }}">Вход</a></li>
+                            <li><a href="{{ url_for('register') }}">Регистрация</a></li>
                         {% endif %}
                     </ul>
                 </div>
+                <div class="col-md-4">
+                    <h5>Кухни</h5>
+                    <ul class="list-unstyled">
+                        {% for cuisine in g.all_cuisines %}
+                            <li><a href="{{ url_for('cuisine_recipes', cuisine_id=cuisine.id) }}">{{ cuisine.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
             </div>
-            <div class="footer-bottom">
-                <p>&copy; 2023 Путешествие через рецепты. Все права защищены.</p>
+            <div class="row border-top pt-3 mt-3">
+                <div class="col-md-6">
+                    <p>&copy; 2025 Путешествие через рецепты. Все права защищены.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <ul class="list-inline mb-0">
+                        <li class="list-inline-item"><a href="#"><i class="fab fa-facebook-f"></i></a></li>
+                        <li class="list-inline-item"><a href="#"><i class="fab fa-twitter"></i></a></li>
+                        <li class="list-inline-item"><a href="#"><i class="fab fa-instagram"></i></a></li>
+                        <li class="list-inline-item"><a href="#"><i class="fab fa-pinterest"></i></a></li>
+                    </ul>
+                </div>
             </div>
         </div>
     </footer>
 
     <!-- Bootstrap 5 JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Custom JavaScript -->
+    <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block scripts %}{% endblock %}
 </body>
