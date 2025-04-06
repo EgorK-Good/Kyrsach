@@ -181,14 +181,22 @@ def toggle_favorite(recipe_id):
 def cuisine_recipes(cuisine_id):
     cuisine = Cuisine.query.get_or_404(cuisine_id)
     page = request.args.get('page', 1, type=int)
+    
+    # Фильтрация рецептов по выбранной кухне
     recipes = Recipe.query.filter_by(cuisine_id=cuisine_id).paginate(page=page, per_page=9, error_out=False)
     
-    # Создаем объект формы для поиска
+    # Создаем объект формы для поиска, но предустанавливаем фильтр по текущей кухне
     form = SearchForm()
     form.cuisine.choices = [(0, 'Все кухни')] + [(c.id, c.name) for c in Cuisine.query.all()]
     form.cuisine.data = cuisine_id  # Предварительно выбираем текущую кухню
     
-    return render_template('recipes.html', form=form, recipes=recipes, cuisine=cuisine, cuisines=Cuisine.query.all())
+    # Используем тот же шаблон, но передаем текущую кухню для контекста
+    return render_template('recipes.html', 
+                           form=form, 
+                           recipes=recipes, 
+                           cuisine=cuisine,
+                           title=f"{cuisine.name} кухня",
+                           description=cuisine.description)
 
 
 @app.route('/admin')

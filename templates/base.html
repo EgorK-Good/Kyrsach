@@ -31,21 +31,14 @@
                     <li class="nav-item">
                         <a class="nav-link {% if request.path == url_for('index') %}active{% endif %}" href="{{ url_for('index') }}">Главная</a>
                     </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="cuisinesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Кухни
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="cuisinesDropdown">
-                            <li><a class="dropdown-item" href="{{ url_for('recipes') }}">Все кухни</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            {% for cuisine in g.all_cuisines %}
-                                <li><a class="dropdown-item" href="{{ url_for('cuisine_recipes', cuisine_id=cuisine.id) }}">{{ cuisine.name }}</a></li>
-                            {% endfor %}
-                        </ul>
-                    </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.path == url_for('recipes') %}active{% endif %}" href="{{ url_for('recipes') }}">Рецепты</a>
+                        <a class="nav-link {% if request.path == url_for('recipes') %}active{% endif %}" href="{{ url_for('recipes') }}">Все рецепты</a>
                     </li>
+                    {% for cuisine in g.all_cuisines %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == url_for('cuisine_recipes', cuisine_id=cuisine.id) %}active{% endif %}" href="{{ url_for('cuisine_recipes', cuisine_id=cuisine.id) }}">{{ cuisine.name }}</a>
+                    </li>
+                    {% endfor %}
                     {% if current_user.is_authenticated %}
                         <li class="nav-item">
                             <a class="nav-link {% if request.path == url_for('add_recipe') %}active{% endif %}" href="{{ url_for('add_recipe') }}">Добавить рецепт</a>
