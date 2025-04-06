@@ -1,4 +1,4 @@
-from flask import render_template, flash, redirect, url_for, request, abort, jsonify
+from flask import render_template, flash, redirect, url_for, request, abort, jsonify, g
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import app, db
@@ -9,6 +9,13 @@ import logging
 import os
 from datetime import datetime
 from sqlalchemy import func, desc
+
+
+# Загрузка глобальных данных перед каждым запросом
+@app.before_request
+def load_global_data():
+    """Загружает данные, необходимые для всех шаблонов"""
+    g.all_cuisines = Cuisine.query.all()
 
 
 @app.route('/')
