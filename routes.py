@@ -343,13 +343,21 @@ def save_image(file, folder='recipe_images'):
     filename = secure_filename(file.filename)
     # Добавляем уникальный идентификатор к имени файла
     unique_filename = f"{uuid.uuid4().hex}_{filename}"
-    file_path = os.path.join('static', 'uploads', folder, unique_filename)
+    
+    # Создаем папку для сохранения, если её нет
+    upload_folder = os.path.join('static', 'uploads', folder)
+    os.makedirs(upload_folder, exist_ok=True)
+    
+    # Полный путь для сохранения файла
+    file_path = os.path.join(upload_folder, unique_filename)
     
     # Сохраняем изображение
     file.save(file_path)
     
-    # Возвращаем путь для сохранения в БД
-    return file_path
+    # Возвращаем URL путь для сохранения в БД и отображения на сайте
+    url_path = url_for('uploaded_file', folder=folder, filename=unique_filename, _external=True)
+    
+    return url_path
 
 def save_image_from_url(url, folder='recipe_images'):
     """Загружает изображение по URL и сохраняет его"""
@@ -359,13 +367,22 @@ def save_image_from_url(url, folder='recipe_images'):
         
         # Создаем уникальное имя файла
         filename = f"{uuid.uuid4().hex}.jpg"
-        file_path = os.path.join('static', 'uploads', folder, filename)
+        
+        # Создаем папку для сохранения, если её нет
+        upload_folder = os.path.join('static', 'uploads', folder)
+        os.makedirs(upload_folder, exist_ok=True)
+        
+        # Полный путь для сохранения файла
+        file_path = os.path.join(upload_folder, filename)
         
         # Открываем изображение и сохраняем его
         image = Image.open(BytesIO(response.content))
         image.save(file_path)
         
-        return file_path
+        # Возвращаем URL путь для сохранения в БД и отображения на сайте
+        url_path = url_for('uploaded_file', folder=folder, filename=filename, _external=True)
+        
+        return url_path
     except Exception as e:
         logging.error(f"Ошибка при загрузке изображения с URL: {e}")
         return None
@@ -632,10 +649,6 @@ def delete_recipe_photo(photo_id):
     if photo.user_id != current_user.id and not current_user.is_admin:
         abort(403)
     
-    # Удаляем файл с диска, если он существует
-    if photo.url and os.path.exists(photo.url):
-        os.remove(photo.url)
-    
     db.session.delete(photo)
     db.session.commit()
     
@@ -807,9 +820,9 @@ def share_recipe(recipe_id):
 
 
 # Получение изображений из директории uploads
-@app.route('/uploads/<path:filename>')
-def uploaded_file(filename):
-    return send_from_directory('static/uploads', filename)
+@app.route('/uploads/<path:folder>/<path:filename>')
+def uploaded_file(folder, filename):
+    return send_from_directory(os.path.join('static/uploads', folder), filename)
 
 
 # Error handlers
