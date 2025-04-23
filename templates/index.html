@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+
+{% block title %}Путешествие через рецепты - Исследуйте кухни мира{% endblock %}
+
+{% block content %}
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container text-center">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <h1 class="display-4 fw-bold">Исследуйте кулинарные традиции со всего мира</h1>
+                    <p class="lead">Откройте для себя аутентичные рецепты русской, армянской, японской и итальянской кухни. Начните своё кулинарное путешествие сегодня!</p>
+                    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                        <a href="{{ url_for('recipes') }}" class="btn btn-primary btn-lg px-4 gap-3">Смотреть рецепты</a>
+                        {% if not current_user.is_authenticated %}
+                            <a href="{{ url_for('register') }}" class="btn btn-outline-primary btn-lg px-4">Регистрация</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Cuisines Section -->
+    <section class="container section">
+        <h2 class="text-center mb-4">Исследуйте кухни</h2>
+        <div class="row">
+            {% for cuisine in cuisines %}
+                <div class="col-md-3 col-sm-6 mb-4">
+                    <div class="card h-100 animate-on-scroll">
+                        <div class="card-body text-center">
+                            <h3 class="card-title">{{ cuisine.name }}</h3>
+                            <p class="card-text">{{ cuisine.description }}</p>
+                            <a href="{{ url_for('cuisine_recipes', cuisine_id=cuisine.id) }}" class="btn btn-outline-primary">Исследовать</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Featured Recipes Section -->
+    <section class="bg-beige py-5">
+        <div class="container section">
+            <h2 class="text-center mb-4">Избранные рецепты</h2>
+            <div class="row">
+                {% if featured_recipes %}
+                    {% for recipe in featured_recipes %}
+                        <div class="col-lg-4 col-md-6 mb-4">
+                            <div class="card h-100 animate-on-scroll">
+                                {% if recipe.image_url %}
+                                <div class="card-img-top-container">
+                                    <img src="{{ recipe.image_url }}" alt="{{ recipe.title }}" class="card-img-top">
+                                </div>
+                                {% endif %}
+                                <div class="card-body">
+                                    <h3 class="card-title">{{ recipe.title }}</h3>
+                                    <p class="card-subtitle">{{ recipe.cuisine.name }} кухня</p>
+                                    <p class="card-text">{{ recipe.description[:100] }}{% if recipe.description|length > 100 %}...{% endif %}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="recipe-meta-item">
+                                            <i class="fas fa-clock"></i>
+                                            <span>{{ recipe.prep_time + recipe.cook_time }} мин</span>
+                                        </div>
+                                        <div class="recipe-meta-item">
+                                            <i class="fas fa-signal"></i>
+                                            <span>{{ recipe.difficulty }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-footer">
+                                    <a href="{{ url_for('recipe_detail', recipe_id=recipe.id) }}" class="btn btn-primary btn-sm">Смотреть рецепт</a>
+                                    {% if current_user.is_authenticated %}
+                                        {% set is_favorite = current_user.favorites.filter_by(recipe_id=recipe.id).first() %}
+                                        <button class="btn btn-favorite float-end {% if is_favorite %}active{% endif %}" 
+                                                data-recipe-id="{{ recipe.id }}" 
+                                                data-bs-toggle="tooltip" 
+                                                title="{% if is_favorite %}Удалить из избранного{% else %}Добавить в избранное{% endif %}">
+                                            <i class="fas fa-heart{% if not is_favorite %}-o{% endif %}"></i>
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="col-12 text-center">
+                        <p>Пока нет доступных рецептов. Будьте первым, кто <a href="{{ url_for('add_recipe') }}">добавит рецепт</a>!</p>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="text-center mt-4">
+                <a href="{{ url_for('recipes') }}" class="btn btn-primary">Смотреть все рецепты</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Join Section -->
+    <section class="container section">
+        <h2 class="text-center mb-4">Почему стоит присоединиться к Путешествию через рецепты?</h2>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 animate-on-scroll">
+                    <div class="card-body text-center">
+                        <i class="fas fa-globe-americas fa-3x text-accent mb-3"></i>
+                        <h3 class="card-title">Откройте новые культуры</h3>
+                        <p class="card-text">Исследуйте аутентичные блюда со всего мира и погрузитесь в их богатую историю и традиции.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 animate-on-scroll">
+                    <div class="card-body text-center">
+                        <i class="fas fa-users fa-3x text-accent mb-3"></i>
+                        <h3 class="card-title">Присоединяйтесь к сообществу</h3>
+                        <p class="card-text">Станьте частью растущего сообщества любителей кулинарии, делитесь опытом и вдохновляйтесь.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 animate-on-scroll">
+                    <div class="card-body text-center">
+                        <i class="fas fa-utensils fa-3x text-accent mb-3"></i>
+                        <h3 class="card-title">Совершенствуйте навыки</h3>
+                        <p class="card-text">Пошаговые инструкции и советы помогут вам освоить новые кулинарные техники и рецепты.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call To Action -->
+    <section class="cta bg-primary text-white py-5">
+        <div class="container text-center">
+            <h2 class="mb-3">Готовы начать кулинарное путешествие?</h2>
+            <p class="lead mb-4">Присоединяйтесь к нам сегодня и откройте для себя новый мир вкусов!</p>
+            <div class="d-grid gap-2 d-md-block">
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('add_recipe') }}" class="btn btn-light btn-lg px-4 me-md-2">Добавить свой рецепт</a>
+                {% else %}
+                    <a href="{{ url_for('register') }}" class="btn btn-light btn-lg px-4 me-md-2">Регистрация</a>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg px-4">Вход</a>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Инициализация подсказок Bootstrap
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+        
+        // Обработка нажатия на кнопку "Добавить в избранное"
+        const favoriteButtons = document.querySelectorAll('.btn-favorite');
+        favoriteButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const recipeId = this.getAttribute('data-recipe-id');
+                fetch(`/toggle_favorite/${recipeId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        this.classList.toggle('active');
+                        const icon = this.querySelector('i');
+                        icon.classList.toggle('fa-heart-o');
+                        icon.classList.toggle('fa-heart');
+                        
+                        // Обновляем текст подсказки
+                        const tooltip = bootstrap.Tooltip.getInstance(this);
+                        if (tooltip) {
+                            this.setAttribute('data-bs-original-title', 
+                                this.classList.contains('active') ? 'Удалить из избранного' : 'Добавить в избранное');
+                            tooltip.update();
+                        }
+                        
+                        showToast(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+        });
+        
+        // Анимация при прокрутке
+        const animateElements = document.querySelectorAll('.animate-on-scroll');
+        
+        function checkIfInView() {
+            animateElements.forEach(element => {
+                const elementTop = element.getBoundingClientRect().top;
+                const elementVisible = 150;
+                
+                if (elementTop < window.innerHeight - elementVisible) {
+                    element.classList.add('visible');
+                }
+            });
+        }
+        
+        window.addEventListener('scroll', checkIfInView);
+        checkIfInView(); // Запускаем один раз при загрузке страницы
+    });
+</script>
+{% endblock %}
