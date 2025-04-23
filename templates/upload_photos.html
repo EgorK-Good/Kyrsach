@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Добавление фотографий для "{{ recipe.title }}"{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h2 class="mb-4">Добавление фотографий для "{{ recipe.title }}"</h2>
+            
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="form-group mb-3">
+                            <label for="photo_url">{{ form.photo_url.label }}</label>
+                            {{ form.photo_url(class="form-control") }}
+                            {% if form.photo_url.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.photo_url.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if form.photo_url.description %}
+                                <small class="form-text text-muted">{{ form.photo_url.description }}</small>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="caption">{{ form.caption.label }}</label>
+                            {{ form.caption(class="form-control") }}
+                            {% if form.caption.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.caption.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group">
+                            {{ form.submit(class="btn btn-primary") }}
+                            <a href="{{ url_for('recipe_detail', recipe_id=recipe.id) }}" class="btn btn-secondary">Отмена</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <a href="{{ url_for('recipe_detail', recipe_id=recipe.id) }}" class="btn btn-outline-secondary">Вернуться к рецепту</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
