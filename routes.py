@@ -673,7 +673,7 @@ def recipes():
     search_query = request.args.get('query', '')
 
     # Инициализируем базовый запрос
-    query = Recipe.query.join(Recipe.cuisine)
+    query = Recipe.query
 
     # Применяем фильтры
     if cuisine_id:
@@ -684,13 +684,18 @@ def recipes():
     # Сортировка по новизне
     query = query.order_by(Recipe.created_at.desc())
     
-    # Добавляем логирование для отладки
-    app.logger.info(f'Total recipes found: {query.count()}')
-    if cuisine_id:
-        app.logger.info(f'Recipes for cuisine {cuisine_id}: {[r.title for r in query.all()]}')
-
-    # Добавляем логирование для отладки
-    app.logger.info(f'SQL Query: {query}')
+    # Добавляем подробное логирование для отладки
+    try:
+        total_count = query.count()
+        app.logger.info(f'Total recipes found: {total_count}')
+        
+        if cuisine_id:
+            cuisine_recipes = query.filter_by(cuisine_id=cuisine_id).all()
+            app.logger.info(f'Recipes for cuisine {cuisine_id}: {[r.title for r in cuisine_recipes]}')
+        
+        app.logger.info(f'SQL Query: {query}')
+    except Exception as e:
+        app.logger.error(f'Error in query execution: {str(e)}')
     app.logger.info(f'Recipe count: {query.count()}')
 
     # Проверяем, есть ли рецепты
