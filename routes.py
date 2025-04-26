@@ -431,6 +431,19 @@ def edit_recipe(recipe_id):
     form = RecipeForm(obj=recipe)
     form.cuisine_id.choices = [(c.id, c.name) for c in Cuisine.query.all()]
 
+    if request.method == 'GET':
+        # Предзаполняем форму текущими данными
+        form.title.data = recipe.title
+        form.description.data = recipe.description
+        form.ingredients.data = recipe.ingredients
+        form.instructions.data = recipe.instructions
+        form.prep_time.data = recipe.prep_time
+        form.cook_time.data = recipe.cook_time
+        form.servings.data = recipe.servings
+        form.difficulty.data = recipe.difficulty
+        form.cuisine_id.data = recipe.cuisine_id
+        form.image_url.data = recipe.image_url
+
     # Заполняем категории, если они есть
     categories = Category.query.all()
     if categories:
