@@ -171,7 +171,10 @@ def cuisine_recipes(cuisine_id):
     page = request.args.get('page', 1, type=int)
 
     # Получаем рецепты для выбранной кухни, сортируя по новизне
-    query = Recipe.query.filter_by(cuisine_id=cuisine_id).order_by(Recipe.created_at.desc())
+    query = Recipe.query.join(Recipe.cuisine).filter(Recipe.cuisine_id == cuisine_id).order_by(Recipe.created_at.desc())
+    
+    # Добавляем логирование для отладки
+    app.logger.info(f'Cuisine {cuisine_id} recipe count: {query.count()}')
     
     # Проверяем количество рецептов
     if query.count() == 0:
@@ -670,16 +673,20 @@ def recipes():
     search_query = request.args.get('query', '')
 
     # Инициализируем базовый запрос
-    query = Recipe.query
+    query = Recipe.query.join(Recipe.cuisine)
 
     # Применяем фильтры
     if cuisine_id:
-        query = query.filter_by(cuisine_id=cuisine_id)
+        query = query.filter(Recipe.cuisine_id == cuisine_id)
     if search_query:
         query = query.filter(Recipe.title.ilike(f'%{search_query}%'))
 
     # Сортировка по новизне
     query = query.order_by(Recipe.created_at.desc())
+
+    # Добавляем логирование для отладки
+    app.logger.info(f'SQL Query: {query}')
+    app.logger.info(f'Recipe count: {query.count()}')
 
     # Проверяем, есть ли рецепты
     if query.count() == 0:
