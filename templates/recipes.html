@@ -41,7 +41,7 @@
     </div>
 
     <!-- Recipes Grid -->
-    {% if recipes.items %}
+    {% if recipes and recipes.items %}
         <div class="row">
             {% for recipe in recipes.items %}
                 <div class="col-lg-4 col-md-6 mb-4">

@@ -658,7 +658,7 @@ def recipes():
     cuisines = Cuisine.query.all()
 
     # Получаем параметры фильтрации
-    cuisine_id = request.args.get('cuisine', 0, type=int)
+    cuisine_id = request.args.get('cuisine', type=int)
     search_query = request.args.get('query', '')
 
     # Инициализируем базовый запрос
@@ -667,7 +667,6 @@ def recipes():
     # Применяем фильтры
     if cuisine_id:
         query = query.filter_by(cuisine_id=cuisine_id)
-
     if search_query:
         query = query.filter(Recipe.title.ilike(f'%{search_query}%'))
 
@@ -679,10 +678,16 @@ def recipes():
     per_page = 9
     recipes = query.paginate(page=page, per_page=per_page, error_out=False)
 
+    # Если выбрана конкретная кухня, получаем её данные
+    selected_cuisine = None
+    if cuisine_id:
+        selected_cuisine = Cuisine.query.get_or_404(cuisine_id)
+
     return render_template('recipes.html', 
                          form=form,
                          recipes=recipes,
-                         cuisines=cuisines)
+                         cuisines=cuisines,
+                         selected_cuisine=selected_cuisine)
 
 
 # Маршрут для расшаривания рецепта в социальных сетях
