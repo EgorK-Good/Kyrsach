@@ -116,8 +116,8 @@ class Rating(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     value = db.Column(db.Integer, nullable=False)  # От 1 до 5
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
+    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'), nullable=False, index=True)
     
     __table_args__ = (db.UniqueConstraint('user_id', 'recipe_id', name='user_recipe_rating_uc'),)
     

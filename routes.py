@@ -532,6 +532,10 @@ def delete_comment(comment_id):
 @app.route('/rate_recipe/<int:recipe_id>', methods=['POST'])
 @login_required
 def rate_recipe(recipe_id):
+    if not current_user.is_authenticated:
+        flash('Пожалуйста, войдите в систему, чтобы оценить рецепт.', 'warning')
+        return redirect(url_for('login'))
+        
     recipe = Recipe.query.get_or_404(recipe_id)
     form = RatingForm()
 

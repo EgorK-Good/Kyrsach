@@ -261,4 +261,12 @@ document.addEventListener('DOMContentLoaded', function() {
             star.querySelector('i').className = value <= initialValue ? 'fas fa-star' : 'far fa-star';
         });
     }
+
+    ratingForm.addEventListener('submit', function(e) {
+        if (!ratingInput.value) {
+            e.preventDefault();
+            alert('Пожалуйста, выберите оценку');
+            return false;
+        }
+    });
 });
