@@ -307,6 +307,12 @@
     document.addEventListener('DOMContentLoaded', function() {
         const stars = document.querySelectorAll('.rating .star');
         const ratingInput = document.getElementById('rating-value');
+        const ratingForm = document.querySelector('form[action*="rate_recipe"]');
+        
+        if (!ratingForm || !ratingInput || !stars.length) {
+            console.error('Rating elements not found');
+            return;
+        }
         
         // Подсветка звезд при наведении
         stars.forEach(star => {

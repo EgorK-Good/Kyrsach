@@ -535,25 +535,36 @@ def rate_recipe(recipe_id):
     recipe = Recipe.query.get_or_404(recipe_id)
     form = RatingForm()
 
-    if form.validate_on_submit():
-        # Проверяем, есть ли уже оценка от этого пользователя
-        existing_rating = Rating.query.filter_by(user_id=current_user.id, recipe_id=recipe_id).first()
+    try:
+        if form.validate_on_submit():
+            rating_value = int(form.value.data)
+            if 1 <= rating_value <= 5:  # Проверяем что оценка от 1 до 5
+                # Проверяем, есть ли уже оценка от этого пользователя
+                existing_rating = Rating.query.filter_by(user_id=current_user.id, recipe_id=recipe_id).first()
 
-        if existing_rating:
-            # Обновляем существующую оценку
-            existing_rating.value = int(form.value.data)
-            db.session.commit()
-            flash('Ваша оценка обновлена!', 'success')
+                if existing_rating:
+                    # Обновляем существующую оценку
+                    existing_rating.value = rating_value
+                    db.session.commit()
+                    flash('Ваша оценка обновлена!', 'success')
+                else:
+                    # Создаем новую оценку
+                    rating = Rating(
+                        value=rating_value,
+                        user_id=current_user.id,
+                        recipe_id=recipe_id
+                    )
+                    db.session.add(rating)
+                    db.session.commit()
+                    flash('Спасибо за вашу оценку!', 'success')
+            else:
+                flash('Оценка должна быть от 1 до 5', 'error')
         else:
-            # Создаем новую оценку
-            rating = Rating(
-                value=int(form.value.data),
-                user_id=current_user.id,
-                recipe_id=recipe_id
-            )
-            db.session.add(rating)
-            db.session.commit()
-            flash('Спасибо за вашу оценку!', 'success')
+            flash('Ошибка при сохранении оценки', 'error')
+    except Exception as e:
+        db.session.rollback()
+        flash('Произошла ошибка при сохранении оценки', 'error')
+        app.logger.error(f'Error saving rating: {str(e)}')
 
     return redirect(url_for('recipe_detail', recipe_id=recipe_id))
 
