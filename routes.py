@@ -673,7 +673,7 @@ def recipes():
     search_query = request.args.get('query', '')
 
     # Инициализируем базовый запрос
-    query = Recipe.query
+    query = Recipe.query.join(Recipe.cuisine)
 
     # Применяем фильтры
     if cuisine_id:
@@ -683,6 +683,11 @@ def recipes():
 
     # Сортировка по новизне
     query = query.order_by(Recipe.created_at.desc())
+    
+    # Добавляем логирование для отладки
+    app.logger.info(f'Total recipes found: {query.count()}')
+    if cuisine_id:
+        app.logger.info(f'Recipes for cuisine {cuisine_id}: {[r.title for r in query.all()]}')
 
     # Добавляем логирование для отладки
     app.logger.info(f'SQL Query: {query}')
