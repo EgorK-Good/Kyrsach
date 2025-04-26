@@ -172,10 +172,17 @@ def cuisine_recipes(cuisine_id):
 
     # Получаем рецепты для выбранной кухни, сортируя по новизне
     query = Recipe.query.filter_by(cuisine_id=cuisine_id).order_by(Recipe.created_at.desc())
+    
+    # Проверяем количество рецептов
+    if query.count() == 0:
+        flash(f'В категории {cuisine.name} пока нет рецептов', 'info')
+    
     recipes = query.paginate(page=page, per_page=9, error_out=False)
 
-    # Простая форма поиска только с полем запроса
+    # Форма поиска с выбором кухни
     form = SearchForm()
+    form.cuisine.choices = [(0, 'Все кухни')] + [(c.id, c.name) for c in Cuisine.query.all()]
+    form.cuisine.data = cuisine_id
 
     # Используем тот же шаблон для отображения
     return render_template('recipes.html', 
@@ -653,17 +660,17 @@ def category_recipes(category_id):
 def recipes():
     # Инициализируем форму поиска
     form = SearchForm()
-    form.cuisine.choices = [(0, 'Все кухни')] + [(c.id, c.name) for c in Cuisine.query.all()]
     
-    # Получаем все кухни для навигации
+    # Получаем все кухни для навигации и формы
     cuisines = Cuisine.query.all()
-
+    form.cuisine.choices = [(0, 'Все кухни')] + [(c.id, c.name) for c in cuisines]
+    
     # Получаем параметры фильтрации
     cuisine_id = request.args.get('cuisine', type=int)
     search_query = request.args.get('query', '')
 
     # Инициализируем базовый запрос
-    query = Recipe.query.join(Recipe.cuisine)
+    query = Recipe.query
 
     # Применяем фильтры
     if cuisine_id:
