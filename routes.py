@@ -233,7 +233,7 @@ def add_cuisine():
             flash('Кухня успешно добавлена!', 'success')
             return redirect(url_for('admin_dashboard'))
 
-    return render_template('add_recipe.html', form=form, title='Добавить новую кухню')
+    return render_template('add_cuisine.html', form=form, title='Добавить новую кухню')
 
 
 @app.route('/admin/delete_cuisine/<int:cuisine_id>', methods=['POST'])
