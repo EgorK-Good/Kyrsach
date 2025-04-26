@@ -17,10 +17,10 @@ document.addEventListener('DOMContentLoaded', function() {
     favoriteButtons.forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
-            
+
             // Get recipe ID from data attribute
             const recipeId = this.getAttribute('data-recipe-id');
-            
+
             // Send AJAX request
             fetch(`/toggle_favorite/${recipeId}`, {
                 method: 'POST',
@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.success) {
                     // Toggle active class on button
                     this.classList.toggle('active');
-                    
+
                     // Update icon
                     const icon = this.querySelector('i');
                     if (icon) {
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             icon.classList.add('fa-heart-o');
                         }
                     }
-                    
+
                     // Show a toast or small notification
                     showToast(data.message);
                 }
@@ -68,14 +68,14 @@ document.addEventListener('DOMContentLoaded', function() {
             toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
             document.body.appendChild(toastContainer);
         }
-        
+
         // Create the toast element
         const toastElement = document.createElement('div');
         toastElement.className = `toast align-items-center text-white bg-${type} border-0`;
         toastElement.setAttribute('role', 'alert');
         toastElement.setAttribute('aria-live', 'assertive');
         toastElement.setAttribute('aria-atomic', 'true');
-        
+
         // Create the toast content
         toastElement.innerHTML = `
             <div class="d-flex">
@@ -85,17 +85,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
         `;
-        
+
         // Add the toast to the container
         toastContainer.appendChild(toastElement);
-        
+
         // Initialize and show the toast
         const toast = new bootstrap.Toast(toastElement, {
             autohide: true,
             delay: 3000
         });
         toast.show();
-        
+
         // Remove the toast element after it's hidden
         toastElement.addEventListener('hidden.bs.toast', function() {
             toastElement.remove();
@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 e.preventDefault();
                 e.stopPropagation();
             }
-            
+
             this.classList.add('was-validated');
         });
     }
@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const ingredientsContainer = document.getElementById('ingredients-container');
             const ingredientInputs = ingredientsContainer.querySelectorAll('.ingredient-input');
             const newIndex = ingredientInputs.length;
-            
+
             const newIngredientRow = document.createElement('div');
             newIngredientRow.className = 'input-group mb-2 ingredient-input';
             newIngredientRow.innerHTML = `
@@ -133,9 +133,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     <i class="fa fa-times"></i>
                 </button>
             `;
-            
+
             ingredientsContainer.appendChild(newIngredientRow);
-            
+
             // Add event listener to the remove button
             const removeBtn = newIngredientRow.querySelector('.remove-ingredient');
             removeBtn.addEventListener('click', function() {
@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const instructionsContainer = document.getElementById('instructions-container');
             const instructionInputs = instructionsContainer.querySelectorAll('.instruction-input');
             const newIndex = instructionInputs.length;
-            
+
             const newInstructionRow = document.createElement('div');
             newInstructionRow.className = 'input-group mb-2 instruction-input';
             newInstructionRow.innerHTML = `
@@ -171,9 +171,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     <i class="fa fa-times"></i>
                 </button>
             `;
-            
+
             instructionsContainer.appendChild(newInstructionRow);
-            
+
             // Add event listener to the remove button
             const removeBtn = newInstructionRow.querySelector('.remove-instruction');
             removeBtn.addEventListener('click', function() {
@@ -228,18 +228,37 @@ document.addEventListener('DOMContentLoaded', function() {
     // Animate elements when they come into view
     const animateOnScroll = function() {
         const elementsToAnimate = document.querySelectorAll('.animate-on-scroll');
-        
+
         elementsToAnimate.forEach(element => {
             const elementPosition = element.getBoundingClientRect().top;
             const screenPosition = window.innerHeight / 1.2;
-            
+
             if (elementPosition < screenPosition) {
                 element.classList.add('fade-in');
             }
         });
     };
-    
+
     // Run animation check on scroll and on load
     window.addEventListener('scroll', animateOnScroll);
     animateOnScroll(); // Run once on page load
+
+    // Обработка звездочек рейтинга
+    const stars = document.querySelectorAll('.rating .star');
+    const ratingInput = document.getElementById('rating-value');
+    const ratingForm = document.querySelector('form[action*="rate_recipe"]');
+
+    if (!ratingForm || !ratingInput || !stars.length) {
+        console.error('Rating elements not found');
+        return;
+    }
+
+    // Устанавливаем начальное значение из hidden поля
+    const initialValue = ratingInput.value;
+    if (initialValue) {
+        stars.forEach(star => {
+            const value = star.dataset.value;
+            star.querySelector('i').className = value <= initialValue ? 'fas fa-star' : 'far fa-star';
+        });
+    }
 });

@@ -275,6 +275,27 @@ a:hover {
 .stars i {
     color: var(--accent);
     margin: 0 2px;
+    cursor: pointer;
+}
+
+.rating {
+    display: inline-block;
+}
+
+.rating .star {
+    cursor: pointer;
+    font-size: 1.5rem;
+    padding: 0 2px;
+}
+
+.rating .star i {
+    color: #ffc107;
+    transition: all 0.2s ease;
+}
+
+.rating .star:hover i,
+.rating .star:hover ~ .star i {
+    color: #ffc107;
 }
 
 .btn-favorite {
