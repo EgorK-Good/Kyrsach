@@ -63,8 +63,8 @@ class Recipe(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     cuisine_id = db.Column(db.Integer, db.ForeignKey('cuisine.id'))
+    image_url = db.Column(db.String(1024))  # Добавляем поле для URL изображения
     
-
     # Связи с другими таблицами
     favorites = db.relationship('Favorite', backref='recipe', lazy='dynamic', cascade='all, delete-orphan')
     comments = db.relationship('Comment', backref='recipe', lazy='dynamic', cascade='all, delete-orphan')
