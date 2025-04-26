@@ -44,16 +44,18 @@
     </div>
 
     <!-- Recipes Grid -->
-    {% if recipes and recipes.items %}
+    {% if recipes %}
         <div class="row">
             {% for recipe in recipes.items %}
                 <div class="col-lg-4 col-md-6 mb-4">
                     <div class="card h-100 animate-on-scroll">
-                        {% if recipe.image_url %}
                         <div class="card-img-top-container">
-                            <img src="{{ recipe.image_url }}" alt="{{ recipe.title }}" class="card-img-top">
+                            {% if recipe.image_url %}
+                                <img src="{{ recipe.image_url }}" alt="{{ recipe.title }}" class="card-img-top">
+                            {% else %}
+                                <img src="{{ url_for('static', filename='images/default-recipe.jpg') }}" alt="{{ recipe.title }}" class="card-img-top">
+                            {% endif %}
                         </div>
-                        {% endif %}
                         <div class="card-body">
                             <span class="badge badge-cuisine mb-2">{{ recipe.cuisine.name }}</span>
                             <h3 class="card-title">{{ recipe.title }}</h3>

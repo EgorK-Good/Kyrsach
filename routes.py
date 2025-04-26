@@ -673,7 +673,7 @@ def recipes():
     search_query = request.args.get('query', '')
 
     # Инициализируем базовый запрос
-    query = Recipe.query.join(Recipe.cuisine)
+    query = Recipe.query
 
     # Применяем фильтры
     if cuisine_id:
