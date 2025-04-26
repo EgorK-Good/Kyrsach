@@ -673,6 +673,10 @@ def recipes():
     # Сортировка по новизне
     query = query.order_by(Recipe.created_at.desc())
 
+    # Проверяем, есть ли рецепты
+    if query.count() == 0:
+        flash('Рецепты пока не добавлены', 'info')
+
     # Пагинация
     page = request.args.get('page', 1, type=int)
     per_page = 9
@@ -682,6 +686,8 @@ def recipes():
     selected_cuisine = None
     if cuisine_id:
         selected_cuisine = Cuisine.query.get_or_404(cuisine_id)
+
+    app.logger.info(f'Found {query.count()} recipes')  # Добавляем логирование
 
     return render_template('recipes.html', 
                          form=form,
