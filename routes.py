@@ -377,11 +377,6 @@ def add_recipe():
     # Заполняем выбор кухни
     form.cuisine_id.choices = [(c.id, c.name) for c in Cuisine.query.all()]
 
-    # Заполняем категории, если они есть
-    categories = Category.query.all()
-    if categories:
-        form.categories.choices = [(0, 'Без категории')] + [(c.id, c.name) for c in categories]
-
     if form.validate_on_submit():
         try:
             recipe = Recipe(
@@ -395,14 +390,8 @@ def add_recipe():
                 difficulty=form.difficulty.data,
                 cuisine_id=form.cuisine_id.data,
                 user_id=current_user.id,
-                image_url=form.image_url.data  # Просто сохраняем URL изображения
+                image_url=form.image_url.data
             )
-
-            # Добавляем категорию, если выбрана
-            if form.categories.data and form.categories.data > 0:
-                category = Category.query.get(form.categories.data)
-                if category:
-                    recipe.categories.append(category)
 
             try:
                 db.session.add(recipe)

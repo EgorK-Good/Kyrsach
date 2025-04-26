@@ -48,17 +48,7 @@
                                     </div>
                                 {% endif %}
                             </div>
-                            <div class="col-md-6">
-                                {{ form.categories.label(class="form-label") }}
-                                {{ form.categories(class="form-select") }}
-                                {% if form.categories.errors %}
-                                    <div class="text-danger">
-                                        {% for error in form.categories.errors %}
-                                            <small>{{ error }}</small>
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
+                            
                         </div>
                         
                         <div class="row mb-3">

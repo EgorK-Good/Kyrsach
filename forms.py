@@ -32,9 +32,6 @@ class RecipeForm(FlaskForm):
         ('Сложный', 'Сложный')
     ], validators=[DataRequired()])
     cuisine_id = SelectField('Кухня', coerce=int, validators=[DataRequired()])
-    # Поле для выбора категорий (для расширенной фильтрации)
-    categories = SelectField('Категория блюда', choices=[], coerce=int, validators=[Optional()])
-    # URL основного изображения
     image_url = StringField('URL изображения', validators=[DataRequired()], 
                            description='Введите URL адрес изображения (например, https://example.com/image.jpg)')
     submit = SubmitField('Сохранить рецепт')
