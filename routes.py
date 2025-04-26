@@ -386,6 +386,10 @@ def add_recipe():
 
     # Заполняем выбор кухни
     form.cuisine_id.choices = [(c.id, c.name) for c in Cuisine.query.all()]
+    
+    # Заполняем выбор категорий
+    categories = Category.query.all()
+    form.categories.choices = [(0, 'Без категории')] + [(c.id, c.name) for c in categories]
 
     if form.validate_on_submit():
         try:
