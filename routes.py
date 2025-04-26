@@ -653,8 +653,9 @@ def category_recipes(category_id):
 def recipes():
     # Инициализируем форму поиска
     form = SearchForm()
-
-    # Получаем все кухни
+    form.cuisine.choices = [(0, 'Все кухни')] + [(c.id, c.name) for c in Cuisine.query.all()]
+    
+    # Получаем все кухни для навигации
     cuisines = Cuisine.query.all()
 
     # Получаем параметры фильтрации
@@ -662,7 +663,7 @@ def recipes():
     search_query = request.args.get('query', '')
 
     # Инициализируем базовый запрос
-    query = Recipe.query
+    query = Recipe.query.join(Recipe.cuisine)
 
     # Применяем фильтры
     if cuisine_id:

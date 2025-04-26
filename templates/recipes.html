@@ -31,8 +31,11 @@
     <!-- Search Box -->
     <div class="search-box mb-4">
         <form method="GET" action="{{ url_for('recipes') }}" class="row g-3 align-items-center">
-            <div class="col-md-10">
+            <div class="col-md-6">
                 {{ form.query(class="form-control", placeholder="Поиск рецептов...") }}
+            </div>
+            <div class="col-md-4">
+                {{ form.cuisine(class="form-select") }}
             </div>
             <div class="col-md-2">
                 <button type="submit" class="btn btn-primary w-100">Поиск</button>
