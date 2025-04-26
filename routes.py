@@ -653,10 +653,10 @@ def category_recipes(category_id):
 def recipes():
     # Инициализируем форму поиска
     form = SearchForm()
+    form.submit = SubmitField('Поиск')
 
-    # Заполняем выбор кухни
+    # Получаем все кухни
     cuisines = Cuisine.query.all()
-    form.cuisine.choices = [(0, 'Все кухни')] + [(c.id, c.name) for c in cuisines]
 
     # Получаем параметры фильтрации
     cuisine_id = request.args.get('cuisine', 0, type=int)
@@ -668,24 +668,22 @@ def recipes():
     # Применяем фильтры
     if cuisine_id:
         query = query.filter_by(cuisine_id=cuisine_id)
-        form.cuisine.data = cuisine_id
 
     if search_query:
-        form.query.data = search_query
         query = query.filter(Recipe.title.ilike(f'%{search_query}%'))
 
-    # Сортировка по новизне (по умолчанию)
+    # Сортировка по новизне
     query = query.order_by(Recipe.created_at.desc())
 
-    # Получаем рецепты с пагинацией
+    # Пагинация
     page = request.args.get('page', 1, type=int)
-    per_page = 9  # Количество рецептов на странице
-    recipes_pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    per_page = 9
+    recipes = query.paginate(page=page, per_page=per_page, error_out=False)
 
     return render_template('recipes.html', 
-                          form=form, 
-                          recipes=recipes_pagination, 
-                          cuisines=cuisines)
+                         form=form,
+                         recipes=recipes,
+                         cuisines=cuisines)
 
 
 # Маршрут для расшаривания рецепта в социальных сетях
