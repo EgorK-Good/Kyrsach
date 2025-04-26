@@ -8,24 +8,31 @@ def populate_users():
         # Создаем тестовых пользователей
         test_users = [
             {
-                'username': 'maria',
+                'username': 'maria_cook',
                 'email': 'maria@example.com',
                 'password': 'password123',
-                'bio': 'Люблю готовить русскую кухню',
+                'bio': 'Шеф-повар русской кухни с 10-летним опытом',
                 'is_admin': False
             },
             {
-                'username': 'alex',
+                'username': 'alex_chef',
                 'email': 'alex@example.com',
                 'password': 'password123',
-                'bio': 'Шеф-повар японской кухни',
+                'bio': 'Специалист по японской кухне',
                 'is_admin': False
             },
             {
-                'username': 'elena',
+                'username': 'elena_gourmet',
                 'email': 'elena@example.com',
                 'password': 'password123',
-                'bio': 'Специалист по армянской кухне',
+                'bio': 'Эксперт армянской кухни',
+                'is_admin': False
+            },
+            {
+                'username': 'marco_italiano',
+                'email': 'marco@example.com',
+                'password': 'password123',
+                'bio': 'Итальянский шеф-повар в третьем поколении',
                 'is_admin': False
             }
         ]

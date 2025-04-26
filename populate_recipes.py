@@ -1,4 +1,3 @@
-
 from app import app, db
 from models import Recipe, Cuisine
 from datetime import datetime
@@ -273,7 +272,7 @@ def populate_recipes():
                 servings=recipe_data['servings'],
                 difficulty=recipe_data['difficulty'],
                 cuisine_id=armenian.id,
-                user_id=1,
+                user_id=4,  # Elena (армянские рецепты)
                 image_url=recipe_data['image_url']
             )
             db.session.add(recipe)
