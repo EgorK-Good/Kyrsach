@@ -5,6 +5,7 @@ from app import app, db
 from models import User, Recipe, Cuisine, Favorite, Comment, Rating, Category, RecipePhoto
 from forms import (LoginForm, RegistrationForm, RecipeForm, CuisineForm, SearchForm,
                   ProfileForm, AdminUserEditForm, CommentForm, RatingForm, RecipePhotoForm, CategoryForm)
+from wtforms import SubmitField
 import logging
 import os
 from datetime import datetime
